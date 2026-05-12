@@ -231,6 +231,7 @@ impl InputContext {
 
     pub fn flush(&mut self) -> String {
         self.process_buffer(true);
+        self.commit_string.clear();
         self.flush_to_commit();
         let out = self.commit_string.clone();
         self.commit_string.clear();
