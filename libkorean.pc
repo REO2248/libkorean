@@ -1,0 +1,9 @@
+prefix=/usr
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: libkorean
+Description: Korean input method library
+Version: 0.1.0
+Libs: -L${libdir} -lkorean
+Cflags: -I${includedir}/libkorean

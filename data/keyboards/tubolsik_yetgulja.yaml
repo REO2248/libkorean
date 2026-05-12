@@ -1,0 +1,123 @@
+# name: 두벌식 옛글자
+
+Q: ㅂ
+S-Q: ㅃ
+
+W: ㅈ
+S-W: ㅉ
+
+E: ㄷ
+S-E: ㄸ
+
+R: ㄱ
+S-R: ㄲ
+
+T: ㅅ
+S-T: ㅆ
+
+Y: ㅛ
+S-Y: ㅛ
+
+U: ㅕ
+S-U: ㅕ
+
+I: ㅑ
+S-I: ㅑ
+
+O: ㅐ
+S-O: ㅒ
+
+P: ㅔ
+S-P: ㅖ
+
+A: ㅁ
+S-A: ㅿ
+
+S: ㄴ
+S-S: ᅝᅠ
+
+D: ㅇ
+S-D: ㆁ
+
+F: ㄹ
+S-F: ㅀ
+
+G: ㅎ
+S-G: ㆆ
+
+H: ㅗ
+S-H: ᆃ
+
+J: ㅓ
+S-J: 🄵
+
+K: ㅏ
+S-K: ㆍ
+
+L: ㅣ
+S-L: ㆌ
+
+Z: ㅋ
+S-Z: ᄼ
+
+X: ㅌ
+S-X: ᄾ
+
+C: ㅊ
+S-C: ᅎ
+
+V: ㅍ
+S-V: ᅐ
+
+B: ㅠ
+S-B: ᅔ
+
+N: ㅜ
+S-N: ᅕ
+
+M: ㅡ
+S-M: ㅡ
+
+Grave: '`'
+S-Grave: '~'
+1: 1
+2: 2
+3: 3
+4: 4
+5: 5
+6: 6
+7: 7
+8: 8
+9: 9
+0: 0
+
+S-1: '!'
+S-2: '@'
+S-3: '#'
+S-4: '$'
+S-5: '%'
+S-6: '^'
+S-7: '&'
+S-8: '*'
+S-9: '('
+S-0: ')'
+Minus: '-'
+S-Minus: _
+Equal: '='
+S-Equal: +
+Backslash: \
+S-Backslash: '|'
+OpenBracket: '['
+S-OpenBracket: '{'
+CloseBracket: ']'
+S-CloseBracket: '}'
+SemiColon: ;
+S-SemiColon: ':'
+Quote: "'"
+S-Quote: '"'
+Comma: ','
+S-Comma: '<'
+Period: '.'
+S-Period: '>'
+Slash: /
+S-Slash: '?'

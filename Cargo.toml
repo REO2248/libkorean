@@ -1,0 +1,41 @@
+[package]
+name = "libkorean"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Korean input method library"
+repository = "https://github.com/reo2248/libkorean"
+keywords = ["korean", "input-method", "ime"]
+categories = ["localization", "internationalization"]
+
+[lib]
+name = "korean"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+enumset = { version = "=1.1.12", features = ["serde"] }
+num-derive = "=0.4.2"
+num-traits = "=0.2.19"
+serde = { version = "=1.0.228", features = ["derive"] }
+thiserror = "=2.0.18"
+fst = "=0.4.7"
+
+[[bin]]
+name = "korean"
+path = "src/bin/korean.rs"
+
+[[bin]]
+name = "korean-hanja-search"
+path = "src/bin/hanja_search.rs"
+
+
+[features]
+default = ["c-api"]
+c-api = []
+
+[profile.release]
+opt-level = 3
+lto = true
+
+[workspace]
+members = ["."]

@@ -1,0 +1,31 @@
+# --- Rust ---
+target
+Cargo.lock.backup
+**/*.rs.bk
+rustc-ice-*.txt
+
+# --- Local Cargo Home ---
+cargo-home/
+
+# --- Arch Linux Packaging (makepkg) ---
+/pkg/
+*.pkg.tar.zst
+*.pkg.tar.xz
+*.pkg.tar.gz
+*.src.tar.gz
+
+# --- IDEs / Editors ---
+.vscode/
+.idea/
+*.sw[a-p]
+*~
+.history/
+
+# --- OS Specific ---
+.DS_Store
+Thumbs.db
+
+# --- Miscellaneous ---
+*.log
+.env
+.env.local

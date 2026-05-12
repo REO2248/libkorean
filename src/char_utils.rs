@@ -1,0 +1,261 @@
+#[must_use]
+pub const fn is_initial(c: char) -> bool {
+    let n = c as u32;
+    (n >= 0x1100 && n <= 0x115F) || (n >= 0xA960 && n <= 0xA97C)
+}
+
+#[must_use]
+pub const fn is_medial(c: char) -> bool {
+    let n = c as u32;
+    (n >= 0x1160 && n <= 0x11A7) || (n >= 0xD7B0 && n <= 0xD7C6)
+}
+
+#[must_use]
+pub const fn is_final(c: char) -> bool {
+    let n = c as u32;
+    (n >= 0x11A8 && n <= 0x11FF) || (n >= 0xD7CB && n <= 0xD7FB)
+}
+
+#[must_use]
+pub const fn is_syllable(c: char) -> bool {
+    (c as u32) >= 0xAC00 && (c as u32) <= 0xD7A3
+}
+
+#[must_use]
+pub const fn is_cjamo(c: char) -> bool {
+    (c as u32) >= 0x3131 && (c as u32) <= 0x318E
+}
+
+#[must_use]
+pub const fn compat_to_conjoining(c: char) -> char {
+    match c as u32 {
+        0x3131 => '\u{1100}',
+        0x3132 => '\u{1101}',
+        0x3133 => '\u{11AA}',
+        0x3134 => '\u{1102}',
+        0x3135 => '\u{11AC}',
+        0x3136 => '\u{11AD}',
+        0x3137 => '\u{1103}',
+        0x3138 => '\u{1104}',
+        0x3139 => '\u{1105}',
+        0x313A => '\u{11B0}',
+        0x313B => '\u{11B1}',
+        0x313C => '\u{11B2}',
+        0x313D => '\u{11B3}',
+        0x313E => '\u{11B4}',
+        0x313F => '\u{11B5}',
+        0x3140 => '\u{11B6}',
+        0x3141 => '\u{1106}',
+        0x3142 => '\u{1107}',
+        0x3143 => '\u{1108}',
+        0x3144 => '\u{11B9}',
+        0x3145 => '\u{1109}',
+        0x3146 => '\u{110A}',
+        0x3147 => '\u{110B}',
+        0x3148 => '\u{110C}',
+        0x3149 => '\u{110D}',
+        0x314A => '\u{110E}',
+        0x314B => '\u{110F}',
+        0x314C => '\u{1110}',
+        0x314D => '\u{1111}',
+        0x314E => '\u{1112}',
+        0x314F => '\u{1161}',
+        0x3150 => '\u{1162}',
+        0x3151 => '\u{1163}',
+        0x3152 => '\u{1164}',
+        0x3153 => '\u{1165}',
+        0x3154 => '\u{1166}',
+        0x3155 => '\u{1167}',
+        0x3156 => '\u{1168}',
+        0x3157 => '\u{1169}',
+        0x3158 => '\u{116A}',
+        0x3159 => '\u{116B}',
+        0x315A => '\u{116C}',
+        0x315B => '\u{116D}',
+        0x315C => '\u{116E}',
+        0x315D => '\u{116F}',
+        0x315E => '\u{1170}',
+        0x315F => '\u{1171}',
+        0x3160 => '\u{1172}',
+        0x3161 => '\u{1173}',
+        0x3162 => '\u{1174}',
+        0x3163 => '\u{1175}',
+        0x3164 => '\u{115F}',
+        0x3165 => '\u{1114}',
+        0x3166 => '\u{1115}',
+        0x3167 => '\u{115B}',
+        0x3168 => '\u{11C8}',
+        0x3169 => '\u{11CC}',
+        0x316A => '\u{A966}',
+        0x316B => '\u{11D3}',
+        0x316C => '\u{11D7}',
+        0x316D => '\u{11D9}',
+        0x316E => '\u{111C}',
+        0x316F => '\u{A971}',
+        0x3170 => '\u{11DF}',
+        0x3171 => '\u{111D}',
+        0x3172 => '\u{111E}',
+        0x3173 => '\u{1120}',
+        0x3174 => '\u{1122}',
+        0x3175 => '\u{1123}',
+        0x3176 => '\u{1127}',
+        0x3177 => '\u{1129}',
+        0x3178 => '\u{112B}',
+        0x3179 => '\u{112C}',
+        0x317A => '\u{112D}',
+        0x317B => '\u{112E}',
+        0x317C => '\u{112F}',
+        0x317D => '\u{1132}',
+        0x317E => '\u{1136}',
+        0x317F => '\u{1140}',
+        0x3180 => '\u{1147}',
+        0x3181 => '\u{114C}',
+        0x3182 => '\u{11F1}',
+        0x3183 => '\u{11F2}',
+        0x3184 => '\u{1157}',
+        0x3185 => '\u{1158}',
+        0x3186 => '\u{1159}',
+        0x3187 => '\u{1184}',
+        0x3188 => '\u{1185}',
+        0x3189 => '\u{1188}',
+        0x318A => '\u{1191}',
+        0x318B => '\u{1192}',
+        0x318C => '\u{1194}',
+        0x318D => '\u{119E}',
+        0x318E => '\u{11A1}',
+        _ => c,
+    }
+}
+
+#[must_use]
+pub const fn initial_sound_to_compat_initial(c: char) -> char {
+    match c as u32 {
+        0x1100 | 0x11A8 => '\u{3131}',
+        0x1101 | 0x11A9 => '\u{3132}',
+        0x1102 | 0x11AB => '\u{3134}',
+        0x1103 | 0x11AE => '\u{3137}',
+        0x1104 => '\u{3138}',
+        0x1105 | 0x11AF => '\u{3139}',
+        0x1106 | 0x11B7 => '\u{3141}',
+        0x1107 | 0x11B8 => '\u{3142}',
+        0x1108 => '\u{3143}',
+        0x1109 | 0x11BA => '\u{3145}',
+        0x110A | 0x11BB => '\u{3146}',
+        0x110B | 0x11BC => '\u{3147}',
+        0x110C | 0x11BD => '\u{3148}',
+        0x110D | 0xD7F9 => '\u{3149}',
+        0x110E | 0x11BE => '\u{314A}',
+        0x110F | 0x11BF => '\u{314B}',
+        0x1110 | 0x11C0 => '\u{314C}',
+        0x1111 | 0x11C1 => '\u{314D}',
+        0x1112 | 0x11C2 => '\u{314E}',
+        0x1161 => '\u{314F}',
+        0x1162 => '\u{3150}',
+        0x1163 => '\u{3151}',
+        0x1164 => '\u{3152}',
+        0x1165 => '\u{3153}',
+        0x1166 => '\u{3154}',
+        0x1167 => '\u{3155}',
+        0x1168 => '\u{3156}',
+        0x1169 => '\u{3157}',
+        0x116A => '\u{3158}',
+        0x116B => '\u{3159}',
+        0x116C => '\u{315A}',
+        0x116D => '\u{315B}',
+        0x116E => '\u{315C}',
+        0x116F => '\u{315D}',
+        0x1170 => '\u{315E}',
+        0x1171 => '\u{315F}',
+        0x1172 => '\u{3160}',
+        0x1173 => '\u{3161}',
+        0x1174 => '\u{3162}',
+        0x1175 => '\u{3163}',
+        0x1188 => '\u{3189}',
+        0x1194 => '\u{318C}',
+        0x119E => '\u{318D}',
+        0x11A1 => '\u{318E}',
+        0x11AA => '\u{3133}',
+        0x11AC => '\u{3135}',
+        0x11AD => '\u{3136}',
+        0x11B0 => '\u{313A}',
+        0x11B1 => '\u{313B}',
+        0x11B2 => '\u{313C}',
+        0x11B3 => '\u{313D}',
+        0x11B4 => '\u{313E}',
+        0x11B5 => '\u{313F}',
+        0x11B6 => '\u{3140}',
+        0x11B9 => '\u{3144}',
+        0x1140 | 0x11EB => '\u{317F}',
+        0x1147 => '\u{3180}',
+        0x114C | 0x11F0 => '\u{3181}',
+        0x11F1 => '\u{3182}',
+        0x1158 => '\u{3185}',
+        0x1159 | 0x11F9 => '\u{3186}',
+        0x11F2 => '\u{3183}',
+        0xA971 => '\u{316F}',
+        _ => c,
+    }
+}
+
+#[must_use]
+pub fn initial_sound_to_syllable(initial_sound: char, medial_sound: char, jo: Option<char>) -> Option<String> {
+    use crate::engine::{Initial, Final, Medial};
+    use std::convert::TryFrom;
+
+    let c = Initial::try_from(initial_sound)
+        .ok()
+        .or_else(|| Initial::from_initial_sound(initial_sound))?;
+    let v = Medial::try_from(medial_sound)
+        .ok()
+        .or_else(|| Medial::from_initial_sound(medial_sound))?;
+    let t = if let Some(j) = jo {
+        Some(
+            Final::try_from(j)
+                .ok()
+                .or_else(|| Final::from_initial_sound(j))?,
+        )
+    } else {
+        None
+    };
+
+    Some(c.compose(v, t))
+}
+
+#[must_use]
+pub fn syllable_to_initial_sound(syl: char) -> Option<(char, char, Option<char>)> {
+    if !is_syllable(syl) {
+        return None;
+    }
+
+    let offset = syl as u32 - 0xAC00;
+    let jong_idx = offset % 28;
+    let jung_idx = (offset / 28) % 21;
+    let cho_idx = offset / (21 * 28);
+
+    let initial_sound = char::from_u32(0x1100 + cho_idx)?;
+    let medial_sound = char::from_u32(0x1161 + jung_idx)?;
+    let jo = if jong_idx != 0 {
+        char::from_u32(0x11A7 + jong_idx)
+    } else {
+        None
+    };
+
+    Some((initial_sound, medial_sound, jo))
+}
+
+#[must_use]
+pub fn decompose_string(input: &str) -> String {
+    let mut output = String::new();
+    for c in input.chars() {
+        if let Some((initial_sound, medial_sound, jo)) = syllable_to_initial_sound(c) {
+            output.push(initial_sound);
+            output.push(medial_sound);
+            if let Some(j) = jo {
+                output.push(j);
+            }
+        } else {
+            output.push(c);
+        }
+    }
+    output
+}

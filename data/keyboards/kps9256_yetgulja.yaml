@@ -1,0 +1,123 @@
+# name: 국규건반 옛글자
+
+Q: ㅂ
+S-Q: ㅃ
+
+W: ㅁ
+S-W: ㅿ
+
+E: ㄷ
+S-E: ㄸ
+
+R: ㄹ
+S-R: ㄹ
+
+T: ㅎ
+S-T: ㆆ
+
+Y: ㅕ
+S-Y: ㅕ
+
+U: ㅜ
+S-U: ㅜ
+
+I: ㅓ
+S-I: ㅓ
+
+O: ㅐ
+S-O: ㅒ
+
+P: ㅔ
+S-P: ㅖ
+
+A: ㅈ
+S-A: ㅉ
+
+S: ㄱ
+S-S: ㄲ
+
+D: ㅇ
+S-D: ㆁ
+
+F: ㄴ
+S-F: ㄴ
+
+G: ㅅ
+S-G: ㅆ
+
+H: ㅗ
+S-H: ㅗ
+
+J: ㅏ
+S-J: ㆍ
+
+K: ㅣ
+S-K: 🄵
+
+L: ㅡ
+S-L: ㅡ
+
+Z: ㅋ
+S-Z: ᄼ
+
+X: ㅌ
+S-X: ᄾ
+
+C: ㅍ
+S-C: ᅎ
+
+V: ㅊ
+S-V: ᅐ
+
+B: ㅠ
+S-B: ᅔ
+
+N: ㅛ
+S-N: ᅕ
+
+M: ㅑ
+S-M: ㅑ
+
+Grave: '`'
+S-Grave: '~'
+1: 1
+2: 2
+3: 3
+4: 4
+5: 5
+6: 6
+7: 7
+8: 8
+9: 9
+0: 0
+
+S-1: '!'
+S-2: '@'
+S-3: '#'
+S-4: '$'
+S-5: '%'
+S-6: '^'
+S-7: '& '
+S-8: '*'
+S-9: '('
+S-0: ')'
+Minus: '-'
+S-Minus: _
+Equal: '='
+S-Equal: +
+Backslash: \
+S-Backslash: '|'
+OpenBracket: '《'
+S-OpenBracket: '{'
+CloseBracket: '》'
+S-CloseBracket: '}'
+SemiColon: ;
+S-SemiColon: ':'
+Quote: "'"
+S-Quote: '"'
+Comma: ','
+S-Comma: '<'
+Period: '.'
+S-Period: '>'
+Slash: /
+S-Slash: '?'

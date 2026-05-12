@@ -1,0 +1,117 @@
+# name: 로마자
+# Romaja Layout (Powerful Multi-char support)
+# Korean input using Latin alphabet romanization
+
+a: ㅏ
+b: ㅂ
+c: ㅊ
+d: ㄷ
+e: ㅔ
+f: ㅍ
+g: ㄱ
+h: ㅎ
+i: ㅣ
+j: ㅈ
+k: ㅋ$ㄱ
+l: ㄹ
+m: ㅁ
+n: ㄴ
+o: ㅗ
+p: ㅍ$ㅂ
+q: ㅋ
+r: ㄹ
+s: ㅅ
+t: ㅌ$ㄷ
+u: ㅜ
+v: ㅂ
+w: ㅜ
+y: ㅣ
+z: ㅈ
+
+ae: ㅐ
+ya: ㅑ
+yae: ㅒ
+eo: ㅓ
+yeo: ㅕ
+ye: ㅖ
+wa: ㅘ
+oa: ㅘ
+wae: ㅙ
+oae: ㅙ
+oe: ㅚ
+oi: ㅚ
+yo: ㅛ
+wo: ㅝ
+weo: ㅝ
+uo: ㅝ
+we: ㅞ
+ue: ㅞ
+wi: ㅟ
+yu: ㅠ
+eu: ㅡ
+ui: ㅢ
+eui: ㅢ
+
+# Consonants
+kk: ㄲ
+gg: ㄲ
+tt: ㄸ
+dd: ㄸ
+pp: ㅃ
+bb: ㅃ
+ss: ㅆ
+jj: ㅉ
+zz: ㅉ
+ch: ㅊ
+kh: ㅋ
+th: ㅌ
+ph: ㅍ
+x: $ㅇ
+S-x: ㅈ
+sh: ㅅ
+ng: $ㅇ
+
+
+Grave: '`'
+S-Grave: '~'
+1: 1
+2: 2
+3: 3
+4: 4
+5: 5
+6: 6
+7: 7
+8: 8
+9: 9
+0: 0
+
+S-1: '!'
+S-2: '@'
+S-3: '#'
+S-4: '$'
+S-5: '%'
+S-6: '^'
+S-7: '& '
+S-8: '*'
+S-9: '('
+S-0: ')'
+Minus: '-'
+S-Minus: _
+Equal: '='
+S-Equal: +
+Backslash: \
+S-Backslash: '|'
+OpenBracket: '《'
+S-OpenBracket: '{'
+CloseBracket: '》'
+S-CloseBracket: '}'
+SemiColon: ;
+S-SemiColon: ':'
+Quote: "'"
+S-Quote: '"'
+Comma: ','
+S-Comma: '<'
+Period: '.'
+S-Period: '>'
+Slash: /
+S-Slash: '?'
