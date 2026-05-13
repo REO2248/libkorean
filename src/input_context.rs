@@ -170,8 +170,13 @@ impl InputContext {
     fn apply_transliteration_rules(&mut self, mut kv: KeyValue) -> KeyValue {
         let is_consonant = matches!(kv, KeyValue::Initial { .. } | KeyValue::Both { .. } | KeyValue::Final { .. });
         if is_consonant && self.state.has_initial() && !self.state.has_medial() {
-            self.state
-                .medial_sound(crate::engine::Medial::Eu, true, self.options);
+            self.state.key(
+                KeyValue::Medial {
+                    medial_sound: crate::engine::Medial::Eu,
+                    compose: true,
+                },
+                self.options,
+            );
             self.commit_syllable();
         }
 
@@ -218,11 +223,11 @@ impl InputContext {
                     use std::convert::TryFrom;
                     use crate::engine::{Initial, Medial, Final};
                     if let (Ok(cho), Ok(jung)) = (Initial::try_from(cho_c), Medial::try_from(jung_c)) {
-                        self.state.initial_sound(cho, self.options);
-                        self.state.medial_sound(jung, true, self.options);
+                        self.state.key(KeyValue::Initial { initial_sound: cho }, self.options);
+                        self.state.key(KeyValue::Medial { medial_sound: jung, compose: true }, self.options);
                         if let Some(j_c) = jong_c {
                             if let Ok(jo) = Final::try_from(j_c) {
-                                self.state.final_sound(jo, None, self.options);
+                                self.state.key(KeyValue::Final { final_sound: jo }, self.options);
                             }
                         }
                     }

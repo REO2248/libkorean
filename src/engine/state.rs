@@ -274,10 +274,14 @@ impl CharacterState {
         if let Some(j) = self.final_sound {
             if opts.treat_final_as_initial {
                 let (new_jong, next_cho) = self.calculate_jongseong_move(j, opts);
+                let next_history = vec![KeyValue::Initial {
+                    initial_sound: next_cho,
+                }];
                 let next = Self {
                     initial_sound: Some(next_cho),
                     medial_sound: Some(medial_sound),
                     compose_jung: compose,
+                    history: next_history,
                     ..Default::default()
                 };
                 self.final_sound = new_jong;
@@ -403,10 +407,14 @@ impl CharacterState {
         opts: InputOptions,
     ) -> CharacterResult {
         let ret = self.initial_sound(initial_sound, opts);
-        if ret == CharacterResult::Consume {
-            self.final_sound(final_sound, Some(KeyValue::ChoJong { initial_sound, final_sound, first: _first }), opts)
-        } else {
-            ret
+        match ret {
+            CharacterResult::Consume => {
+                self.final_sound(final_sound, Some(KeyValue::ChoJong { initial_sound, final_sound, first: _first }), opts)
+            }
+            CharacterResult::NewCharacter(mut next) => {
+                next.final_sound(final_sound, Some(KeyValue::ChoJong { initial_sound, final_sound, first: _first }), opts);
+                CharacterResult::NewCharacter(next)
+            }
         }
     }
 
@@ -420,10 +428,12 @@ impl CharacterState {
     ) -> CharacterResult {
         if first {
             let ret = self.initial_sound(initial_sound, opts);
-            if ret == CharacterResult::Consume {
-                self.medial_sound(medial_sound, compose, opts)
-            } else {
-                ret
+            match ret {
+                CharacterResult::Consume => self.medial_sound(medial_sound, compose, opts),
+                CharacterResult::NewCharacter(mut next) => {
+                    next.medial_sound(medial_sound, compose, opts);
+                    CharacterResult::NewCharacter(next)
+                }
             }
         } else {
             self.medial_sound(medial_sound, compose, opts)
@@ -440,10 +450,14 @@ impl CharacterState {
     ) -> CharacterResult {
         if first {
             let ret = self.medial_sound(medial_sound, compose, opts);
-            if ret == CharacterResult::Consume {
-                self.final_sound(final_sound, Some(KeyValue::JungJong { medial_sound, final_sound, first, compose }), opts)
-            } else {
-                ret
+            match ret {
+                CharacterResult::Consume => {
+                    self.final_sound(final_sound, Some(KeyValue::JungJong { medial_sound, final_sound, first, compose }), opts)
+                }
+                CharacterResult::NewCharacter(mut next) => {
+                    next.final_sound(final_sound, Some(KeyValue::JungJong { medial_sound, final_sound, first, compose }), opts);
+                    CharacterResult::NewCharacter(next)
+                }
             }
         } else {
             self.final_sound(final_sound, Some(KeyValue::JungJong { medial_sound, final_sound, first, compose }), opts)
