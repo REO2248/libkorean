@@ -91,14 +91,18 @@ impl InputContext {
 
     pub fn process(&mut self, key: char) -> bool {
         self.commit_string.clear();
-
-        if self.is_transliteration() && key.is_ascii_uppercase() {
-            self.process_buffer(true);
-            self.flush_to_commit();
-        }
+        self.handle_transliteration_preprocess(key);
 
         self.input_buffer.push(key);
         self.process_buffer(false)
+    }
+
+    fn handle_transliteration_preprocess(&mut self, key: char) {
+        if !self.is_transliteration() || !key.is_ascii_uppercase() {
+            return;
+        }
+        self.process_buffer(true);
+        self.flush_to_commit();
     }
 
     fn process_buffer(&mut self, force: bool) -> bool {
@@ -148,37 +152,7 @@ impl InputContext {
 
     fn process_kv(&mut self, mut kv: KeyValue) {
         if self.is_transliteration() {
-            let is_consonant = matches!(kv, KeyValue::Initial { .. } | KeyValue::Both { .. } | KeyValue::Final { .. });
-            if is_consonant && self.state.has_initial() && !self.state.has_medial() {
-                self.state
-                    .medial_sound(crate::engine::Medial::Eu, true, self.options);
-                self.commit_syllable();
-            }
-
-            if let KeyValue::Medial { .. } = kv {
-                if !self.state.has_initial()
-                    && !self.state.has_medial()
-                    && !self.state.has_final()
-                {
-                    self.state.key(
-                        KeyValue::Initial {
-                            initial_sound: crate::engine::Initial::Iung,
-                        },
-                        self.options,
-                    );
-                }
-            }
-
-            if let KeyValue::Final { final_sound } = kv {
-                if !self.state.has_initial()
-                    && !self.state.has_medial()
-                    && !self.state.has_final()
-                {
-                    if let crate::engine::FinalToInitial::Direct(next_cho) = final_sound.to_initial() {
-                        kv = KeyValue::Initial { initial_sound: next_cho };
-                    }
-                }
-            }
+            kv = self.apply_transliteration_rules(kv);
         }
 
         if let KeyValue::Pass(ch) = kv {
@@ -191,6 +165,41 @@ impl InputContext {
 
         let ret = self.state.key(kv, self.options);
         self.handle_result(ret);
+    }
+
+    fn apply_transliteration_rules(&mut self, mut kv: KeyValue) -> KeyValue {
+        let is_consonant = matches!(kv, KeyValue::Initial { .. } | KeyValue::Both { .. } | KeyValue::Final { .. });
+        if is_consonant && self.state.has_initial() && !self.state.has_medial() {
+            self.state
+                .medial_sound(crate::engine::Medial::Eu, true, self.options);
+            self.commit_syllable();
+        }
+
+        if let KeyValue::Medial { .. } = kv {
+            if !self.state.has_initial()
+                && !self.state.has_medial()
+                && !self.state.has_final()
+            {
+                self.state.key(
+                    KeyValue::Initial {
+                        initial_sound: crate::engine::Initial::Iung,
+                    },
+                    self.options,
+                );
+            }
+        }
+
+        if let KeyValue::Final { final_sound } = kv {
+            if !self.state.has_initial()
+                && !self.state.has_medial()
+                && !self.state.has_final()
+            {
+                if let crate::engine::FinalToInitial::Direct(next_cho) = final_sound.to_initial() {
+                    kv = KeyValue::Initial { initial_sound: next_cho };
+                }
+            }
+        }
+        kv
     }
 
     pub fn backspace(&mut self) -> InputEvent {
