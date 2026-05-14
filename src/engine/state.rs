@@ -1,7 +1,7 @@
-use crate::engine::{
-    initial_to_final, Initial, InputOptions, FinalToInitial, Final, Medial, KeyValue,
-};
 use crate::char_utils::initial_sound_to_compat_initial;
+use crate::engine::{
+    initial_to_final, Final, FinalToInitial, Initial, InputOptions, KeyValue, Medial,
+};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum CharacterResult {
@@ -107,20 +107,32 @@ impl CharacterState {
         true
     }
 
-
     fn apply_kv(&mut self, kv: KeyValue, opts: InputOptions) -> CharacterResult {
         match kv {
             KeyValue::Initial { initial_sound } => self.initial_sound(initial_sound, opts),
-            KeyValue::Medial { medial_sound, compose } => self.medial_sound(medial_sound, compose, opts),
+            KeyValue::Medial {
+                medial_sound,
+                compose,
+            } => self.medial_sound(medial_sound, compose, opts),
             KeyValue::Final { final_sound } => self.final_sound(final_sound, Some(kv), opts),
-            KeyValue::Both { initial_sound, final_sound } => {
-                if self.initial_sound.is_some() && self.medial_sound.is_some() && self.final_sound.is_none() {
+            KeyValue::Both {
+                initial_sound,
+                final_sound,
+            } => {
+                if self.initial_sound.is_some()
+                    && self.medial_sound.is_some()
+                    && self.final_sound.is_none()
+                {
                     self.final_sound(final_sound, Some(kv), opts)
                 } else {
                     self.initial_sound(initial_sound, opts)
                 }
             }
-            KeyValue::ChoJong { initial_sound, final_sound, first } => self.cho_jong(initial_sound, final_sound, first, opts),
+            KeyValue::ChoJong {
+                initial_sound,
+                final_sound,
+                first,
+            } => self.cho_jong(initial_sound, final_sound, first, opts),
             KeyValue::ChoJung {
                 initial_sound,
                 medial_sound,
@@ -221,7 +233,12 @@ impl CharacterState {
         }
     }
 
-    pub fn medial_sound(&mut self, medial_sound: Medial, compose: bool, opts: InputOptions) -> CharacterResult {
+    pub fn medial_sound(
+        &mut self,
+        medial_sound: Medial,
+        compose: bool,
+        opts: InputOptions,
+    ) -> CharacterResult {
         if let Some(j) = self.final_sound {
             if opts.treat_final_as_initial {
                 let (new_jong, next_cho) = self.calculate_jongseong_move(j, opts);
@@ -245,7 +262,8 @@ impl CharacterState {
                 ..Default::default()
             })
         } else if let Some(prev) = self.medial_sound {
-            if let Some(new) = Self::try_add_jungseong(prev, self.compose_jung, medial_sound, compose, opts)
+            if let Some(new) =
+                Self::try_add_jungseong(prev, self.compose_jung, medial_sound, compose, opts)
             {
                 self.medial_sound = Some(new);
                 self.compose_jung = true;
@@ -270,31 +288,25 @@ impl CharacterState {
         }
     }
 
-    fn calculate_jongseong_move(
-        &self,
-        j: Final,
-        opts: InputOptions,
-    ) -> (Option<Final>, Initial) {
+    fn calculate_jongseong_move(&self, j: Final, opts: InputOptions) -> (Option<Final>, Initial) {
         if let Some(KeyValue::Both { initial_sound, .. }) = self.final_kv {
-             return (None, initial_sound);
+            return (None, initial_sound);
         }
         if let Some(KeyValue::Initial { initial_sound }) = self.final_kv {
-             return (None, initial_sound);
+            return (None, initial_sound);
         }
 
         match j.to_initial() {
             FinalToInitial::Direct(c) => {
-                if c == Initial::Iung {
-                    return (Some(j), Initial::Iung);
+                if c == Initial::이응 {
+                    return (Some(j), Initial::이응);
                 }
                 if opts.combi_on_double_stroke {
-                    let is_ssang = matches!(c, Initial::ToenKiuk | Initial::ToenSiut);
+                    let is_ssang = matches!(c, Initial::된기윽 | Initial::된시읏);
                     if is_ssang && !self.is_last_kv_ssang() {
                         match c {
-                            Initial::ToenKiuk => {
-                                return (Some(Final::Kiuk), Initial::Kiuk)
-                            }
-                            Initial::ToenSiut => return (Some(Final::Siut), Initial::Siut),
+                            Initial::된기윽 => return (Some(Final::기윽), Initial::기윽),
+                            Initial::된시읏 => return (Some(Final::시읏), Initial::시읏),
                             _ => {}
                         }
                     }
@@ -309,28 +321,33 @@ impl CharacterState {
         self.history.last().is_some_and(|kv| match kv {
             KeyValue::Both { initial_sound, .. } => matches!(
                 initial_sound,
-                Initial::ToenKiuk
-                    | Initial::ToenSiut
-                    | Initial::ToenTiut
-                    | Initial::ToenPiup
-                    | Initial::ToenJiut
+                Initial::된기윽
+                    | Initial::된시읏
+                    | Initial::된디읃
+                    | Initial::된비읍
+                    | Initial::된지읒
             ),
             KeyValue::Initial { initial_sound } => matches!(
                 initial_sound,
-                Initial::ToenKiuk
-                    | Initial::ToenSiut
-                    | Initial::ToenTiut
-                    | Initial::ToenPiup
-                    | Initial::ToenJiut
+                Initial::된기윽
+                    | Initial::된시읏
+                    | Initial::된디읃
+                    | Initial::된비읍
+                    | Initial::된지읒
             ),
             KeyValue::Final { final_sound } => {
-                matches!(final_sound, Final::ToenKiuk | Final::ToenSiut)
+                matches!(final_sound, Final::된기윽 | Final::된시읏)
             }
             _ => false,
         })
     }
 
-    pub fn final_sound(&mut self, final_sound: Final, kv: Option<KeyValue>, opts: InputOptions) -> CharacterResult {
+    pub fn final_sound(
+        &mut self,
+        final_sound: Final,
+        kv: Option<KeyValue>,
+        opts: InputOptions,
+    ) -> CharacterResult {
         if let Some(prev) = self.final_sound {
             if let Some(new) = prev.try_add(final_sound, opts) {
                 self.final_sound = Some(new);
@@ -359,11 +376,25 @@ impl CharacterState {
     ) -> CharacterResult {
         let ret = self.initial_sound(initial_sound, opts);
         match ret {
-            CharacterResult::Consume => {
-                self.final_sound(final_sound, Some(KeyValue::ChoJong { initial_sound, final_sound, first: _first }), opts)
-            }
+            CharacterResult::Consume => self.final_sound(
+                final_sound,
+                Some(KeyValue::ChoJong {
+                    initial_sound,
+                    final_sound,
+                    first: _first,
+                }),
+                opts,
+            ),
             CharacterResult::NewCharacter(mut next) => {
-                next.final_sound(final_sound, Some(KeyValue::ChoJong { initial_sound, final_sound, first: _first }), opts);
+                next.final_sound(
+                    final_sound,
+                    Some(KeyValue::ChoJong {
+                        initial_sound,
+                        final_sound,
+                        first: _first,
+                    }),
+                    opts,
+                );
                 CharacterResult::NewCharacter(next)
             }
         }
@@ -402,16 +433,41 @@ impl CharacterState {
         if first {
             let ret = self.medial_sound(medial_sound, compose, opts);
             match ret {
-                CharacterResult::Consume => {
-                    self.final_sound(final_sound, Some(KeyValue::JungJong { medial_sound, final_sound, first, compose }), opts)
-                }
+                CharacterResult::Consume => self.final_sound(
+                    final_sound,
+                    Some(KeyValue::JungJong {
+                        medial_sound,
+                        final_sound,
+                        first,
+                        compose,
+                    }),
+                    opts,
+                ),
                 CharacterResult::NewCharacter(mut next) => {
-                    next.final_sound(final_sound, Some(KeyValue::JungJong { medial_sound, final_sound, first, compose }), opts);
+                    next.final_sound(
+                        final_sound,
+                        Some(KeyValue::JungJong {
+                            medial_sound,
+                            final_sound,
+                            first,
+                            compose,
+                        }),
+                        opts,
+                    );
                     CharacterResult::NewCharacter(next)
                 }
             }
         } else {
-            self.final_sound(final_sound, Some(KeyValue::JungJong { medial_sound, final_sound, first, compose }), opts)
+            self.final_sound(
+                final_sound,
+                Some(KeyValue::JungJong {
+                    medial_sound,
+                    final_sound,
+                    first,
+                    compose,
+                }),
+                opts,
+            )
         }
     }
 
@@ -427,7 +483,9 @@ impl CharacterState {
         }
         if opts.auto_reorder {
             if ori_compose || compose {
-                ori_jung.try_add(medial_sound, opts).or_else(|| medial_sound.try_add(ori_jung, opts))
+                ori_jung
+                    .try_add(medial_sound, opts)
+                    .or_else(|| medial_sound.try_add(ori_jung, opts))
             } else {
                 None
             }
@@ -449,8 +507,8 @@ mod tests {
         let opts = InputOptions::default();
 
         let k = KeyValue::Both {
-            initial_sound: Initial::Khiuk,
-            final_sound: Final::Kiuk,
+            initial_sound: Initial::키읔,
+            final_sound: Final::기윽,
         };
         let a = KeyValue::Medial {
             medial_sound: Medial::A,

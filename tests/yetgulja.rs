@@ -17,10 +17,10 @@ fn test_yetgulja_combinations() {
     let mut ic = InputContext::new("kps9256_yetgulja").expect("valid layout");
 
     // In KPS9256_yetgulja:
-    // f: ㄴ (Niun)
-    // S-f: ᅝ (NiunHiut)
+    // f: ㄴ (니은)
+    // S-f: ᅝ (니은히읗)
 
-    // Process ㄴ (f) then ㄱ (s) -> should combine to ᄓ (Initial::NiunKiuk)
+    // Process ㄴ (f) then ㄱ (s) -> should combine to ᄓ (Initial::니은기윽)
     ic.process('f');
     assert_eq!(ic.preedit_string(), "ㄴ");
     ic.process('s');
@@ -53,7 +53,7 @@ fn test_yetgulja_syllable_break_marker() {
     ic.process('j');
     assert_eq!(ic.preedit_string(), "ㅏ");
 
-    ic.process('K');  // Press marker (shift-k)
+    ic.process('K'); // Press marker (shift-k)
     assert_eq!(ic.get_commit_string(), "ㅏ");
     assert_eq!(ic.preedit_string(), "");
 }

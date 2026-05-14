@@ -1,6 +1,6 @@
-use crate::engine::{InputOptions, KeyValue};
 use crate::engine::layout::Layout;
 use crate::engine::state::{CharacterResult, CharacterState};
+use crate::engine::{InputOptions, KeyValue};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum InputEvent {
@@ -114,11 +114,7 @@ impl InputContext {
             let mut match_len = 0;
             let mut matched_kv = None;
 
-            let mut ends: Vec<usize> = self
-                .input_buffer
-                .char_indices()
-                .map(|(i, _)| i)
-                .collect();
+            let mut ends: Vec<usize> = self.input_buffer.char_indices().map(|(i, _)| i).collect();
             ends.push(self.input_buffer.len());
 
             for end in ends.into_iter().rev() {
@@ -134,14 +130,22 @@ impl InputContext {
             }
 
             if let Some(kv) = matched_kv {
-                if !force && self.layout.is_prefix(&self.input_buffer, self.is_transliteration()) {
+                if !force
+                    && self
+                        .layout
+                        .is_prefix(&self.input_buffer, self.is_transliteration())
+                {
                     return true;
                 }
 
                 self.process_kv(kv);
                 self.input_buffer.drain(..match_len);
             } else {
-                if !force && self.layout.is_prefix(&self.input_buffer, self.is_transliteration()) {
+                if !force
+                    && self
+                        .layout
+                        .is_prefix(&self.input_buffer, self.is_transliteration())
+                {
                     return true;
                 }
                 let first_char = self.input_buffer.chars().next().unwrap();
@@ -164,10 +168,14 @@ impl InputContext {
         self.state.reset();
         self.noble_history.clear();
         for mut kv in keys {
-            if self.is_transliteration() { kv = self.apply_transliteration_rules(kv); }
+            if self.is_transliteration() {
+                kv = self.apply_transliteration_rules(kv);
+            }
             if let KeyValue::Pass(ch) = kv {
                 self.flush_to_commit();
-                if ch != Self::SYLLABLE_BREAK_MARKER { self.commit_string.push(ch); }
+                if ch != Self::SYLLABLE_BREAK_MARKER {
+                    self.commit_string.push(ch);
+                }
                 continue;
             }
             match self.state.key(kv, self.options) {
@@ -175,21 +183,34 @@ impl InputContext {
                 CharacterResult::NewCharacter(mut next) => {
                     if self.is_transliteration() && !next.has_initial() && next.has_medial() {
                         let mut final_next = CharacterState::new();
-                        final_next.key(KeyValue::Initial { initial_sound: crate::engine::Initial::Iung }, self.options);
-                        for k in next.history() { final_next.key(*k, self.options); }
+                        final_next.key(
+                            KeyValue::Initial {
+                                initial_sound: crate::engine::Initial::이응,
+                            },
+                            self.options,
+                        );
+                        for k in next.history() {
+                            final_next.key(*k, self.options);
+                        }
                         next = final_next;
                     }
                     self.commit_syllable();
                     self.state = next;
-                    if self.history.is_empty() { self.history.extend(self.state.history()); }
-                    else { self.history.push(kv); }
+                    if self.history.is_empty() {
+                        self.history.extend(self.state.history());
+                    } else {
+                        self.history.push(kv);
+                    }
                 }
             }
         }
     }
 
     fn apply_transliteration_rules(&mut self, mut kv: KeyValue) -> KeyValue {
-        let is_consonant = matches!(kv, KeyValue::Initial { .. } | KeyValue::Both { .. } | KeyValue::Final { .. });
+        let is_consonant = matches!(
+            kv,
+            KeyValue::Initial { .. } | KeyValue::Both { .. } | KeyValue::Final { .. }
+        );
         if is_consonant && self.state.has_initial() && !self.state.has_medial() {
             self.state.key(
                 KeyValue::Medial {
@@ -202,13 +223,10 @@ impl InputContext {
         }
 
         if let KeyValue::Medial { .. } = kv {
-            if !self.state.has_initial()
-                && !self.state.has_medial()
-                && !self.state.has_final()
-            {
+            if !self.state.has_initial() && !self.state.has_medial() && !self.state.has_final() {
                 self.state.key(
                     KeyValue::Initial {
-                        initial_sound: crate::engine::Initial::Iung,
+                        initial_sound: crate::engine::Initial::이응,
                     },
                     self.options,
                 );
@@ -216,12 +234,11 @@ impl InputContext {
         }
 
         if let KeyValue::Final { final_sound } = kv {
-            if !self.state.has_initial()
-                && !self.state.has_medial()
-                && !self.state.has_final()
-            {
+            if !self.state.has_initial() && !self.state.has_medial() && !self.state.has_final() {
                 if let crate::engine::FinalToInitial::Direct(next_cho) = final_sound.to_initial() {
-                    kv = KeyValue::Initial { initial_sound: next_cho };
+                    kv = KeyValue::Initial {
+                        initial_sound: next_cho,
+                    };
                 }
             }
         }
@@ -313,7 +330,10 @@ impl InputContext {
         let mut out = final_out;
 
         if !self.input_buffer.is_empty() {
-            if let Some(mut kv) = self.layout.lookup(&self.input_buffer, self.is_transliteration()) {
+            if let Some(mut kv) = self
+                .layout
+                .lookup(&self.input_buffer, self.is_transliteration())
+            {
                 let mut temp_state = self.state.clone();
                 if self.is_transliteration()
                     && !temp_state.has_initial()
@@ -323,13 +343,17 @@ impl InputContext {
                     if let KeyValue::Medial { .. } = kv {
                         temp_state.key(
                             KeyValue::Initial {
-                                initial_sound: crate::engine::Initial::Iung,
+                                initial_sound: crate::engine::Initial::이응,
                             },
                             self.options,
                         );
                     } else if let KeyValue::Final { final_sound } = kv {
-                        if let crate::engine::FinalToInitial::Direct(next_cho) = final_sound.to_initial() {
-                            kv = KeyValue::Initial { initial_sound: next_cho };
+                        if let crate::engine::FinalToInitial::Direct(next_cho) =
+                            final_sound.to_initial()
+                        {
+                            kv = KeyValue::Initial {
+                                initial_sound: next_cho,
+                            };
                         }
                     }
                 }
@@ -343,14 +367,11 @@ impl InputContext {
                     }
                     CharacterResult::NewCharacter(mut next) => {
                         out.clear();
-                        if self.is_transliteration()
-                            && !next.has_initial()
-                            && next.has_medial()
-                        {
+                        if self.is_transliteration() && !next.has_initial() && next.has_medial() {
                             let mut final_next = CharacterState::new();
                             final_next.key(
                                 KeyValue::Initial {
-                                    initial_sound: crate::engine::Initial::Iung,
+                                    initial_sound: crate::engine::Initial::이응,
                                 },
                                 self.options,
                             );
@@ -386,7 +407,6 @@ impl InputContext {
         self.commit_string.clear();
     }
 
-
     fn flush_to_commit(&mut self) {
         match self.output_mode {
             OutputMode::Syllable => {
@@ -404,7 +424,9 @@ impl InputContext {
     fn commit_syllable(&mut self) {
         let mut syl = String::new();
         self.state.commit(&mut syl);
-        if syl.is_empty() { return; }
+        if syl.is_empty() {
+            return;
+        }
 
         if !self.options.noble_name && !self.options.word_unit_commit {
             self.commit_string.push_str(&syl);
@@ -413,21 +435,26 @@ impl InputContext {
         }
 
         self.noble_history.push_str(&syl);
-        if self.options.word_unit_commit { return; }
+        if self.options.word_unit_commit {
+            return;
+        }
 
         let mut replaced = false;
         if self.noble_history.ends_with("김일성") {
-            self.noble_history.truncate(self.noble_history.len() - "김일성".len());
+            self.noble_history
+                .truncate(self.noble_history.len() - "김일성".len());
             self.flush_noble_name();
             self.commit_string.push_str("\u{F113}\u{F114}\u{F115}");
             replaced = true;
         } else if self.noble_history.ends_with("김정일") {
-            self.noble_history.truncate(self.noble_history.len() - "김정일".len());
+            self.noble_history
+                .truncate(self.noble_history.len() - "김정일".len());
             self.flush_noble_name();
             self.commit_string.push_str("\u{F116}\u{F117}\u{F118}");
             replaced = true;
         } else if self.noble_history.ends_with("김정은") {
-            self.noble_history.truncate(self.noble_history.len() - "김정은".len());
+            self.noble_history
+                .truncate(self.noble_history.len() - "김정은".len());
             self.flush_noble_name();
             self.commit_string.push_str("\u{F120}\u{F121}\u{F122}");
             replaced = true;
