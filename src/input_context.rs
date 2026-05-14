@@ -214,7 +214,7 @@ impl InputContext {
         if is_consonant && self.state.has_initial() && !self.state.has_medial() {
             self.state.key(
                 KeyValue::Medial {
-                    medial_sound: crate::engine::Medial::Eu,
+                    medial_sound: crate::engine::Medial::으,
                     compose: true,
                 },
                 self.options,

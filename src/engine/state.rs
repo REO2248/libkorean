@@ -511,7 +511,7 @@ mod tests {
             final_sound: Final::기윽,
         };
         let a = KeyValue::Medial {
-            medial_sound: Medial::A,
+            medial_sound: Medial::아,
             compose: true,
         };
 
