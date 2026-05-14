@@ -1,6 +1,6 @@
-use crate::char_utils::initial_sound_to_compat_initial;
+use crate::char_utils::첫소리_호환_첫소리로_변환;
 use crate::engine::{
-    initial_to_final, Final, FinalToInitial, Initial, InputOptions, KeyValue, Medial,
+    첫소리_끝소리_변환, 끝소리, 끝소리To첫소리, 첫소리, InputOptions, KeyValue, 가운데소리,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -11,10 +11,10 @@ pub enum CharacterResult {
 
 #[derive(Default, Clone, Debug, PartialEq, Eq)]
 pub struct CharacterState {
-    initial_sound: Option<Initial>,
-    medial_sound: Option<Medial>,
+    첫소리: Option<첫소리>,
+    가운데소리: Option<가운데소리>,
     compose_jung: bool,
-    final_sound: Option<Final>,
+    끝소리: Option<끝소리>,
     final_kv: Option<KeyValue>,
     history: Vec<KeyValue>,
 }
@@ -22,36 +22,36 @@ pub struct CharacterState {
 impl CharacterState {
     pub const fn new() -> Self {
         Self {
-            initial_sound: None,
-            medial_sound: None,
+            첫소리: None,
+            가운데소리: None,
             compose_jung: false,
-            final_sound: None,
+            끝소리: None,
             final_kv: None,
             history: Vec::new(),
         }
     }
 
     pub fn reset(&mut self) {
-        self.initial_sound = None;
-        self.medial_sound = None;
-        self.final_sound = None;
+        self.첫소리 = None;
+        self.가운데소리 = None;
+        self.끝소리 = None;
         self.final_kv = None;
         self.compose_jung = false;
         self.history.clear();
     }
 
     pub const fn need_display(&self) -> bool {
-        self.initial_sound.is_some() || self.medial_sound.is_some() || self.final_sound.is_some()
+        self.첫소리.is_some() || self.가운데소리.is_some() || self.끝소리.is_some()
     }
 
     pub const fn has_initial(&self) -> bool {
-        self.initial_sound.is_some()
+        self.첫소리.is_some()
     }
     pub const fn has_medial(&self) -> bool {
-        self.medial_sound.is_some()
+        self.가운데소리.is_some()
     }
     pub const fn has_final(&self) -> bool {
-        self.final_sound.is_some()
+        self.끝소리.is_some()
     }
 
     pub fn history(&self) -> &[KeyValue] {
@@ -59,11 +59,11 @@ impl CharacterState {
     }
 
     pub fn preedit(&self, out: &mut String) {
-        match (self.initial_sound, self.medial_sound, self.final_sound) {
+        match (self.첫소리, self.가운데소리, self.끝소리) {
             (Some(c), Some(j), jo) => out.push_str(&c.compose(j, jo)),
-            (Some(c), None, None) => out.push(initial_sound_to_compat_initial(c.into())),
-            (None, Some(j), None) => out.push(initial_sound_to_compat_initial(j.into())),
-            (None, None, Some(jo)) => out.push(initial_sound_to_compat_initial(jo.into())),
+            (Some(c), None, None) => out.push(첫소리_호환_첫소리로_변환(c.into())),
+            (None, Some(j), None) => out.push(첫소리_호환_첫소리로_변환(j.into())),
+            (None, None, Some(jo)) => out.push(첫소리_호환_첫소리로_변환(jo.into())),
             (None, Some(j), Some(jo)) => {
                 out.push(j.jamo());
                 out.push(jo.jamo());
@@ -77,13 +77,13 @@ impl CharacterState {
     }
 
     pub fn jamo(&self, out: &mut String) {
-        if let Some(c) = self.initial_sound {
+        if let Some(c) = self.첫소리 {
             out.push(c.into());
         }
-        if let Some(j) = self.medial_sound {
+        if let Some(j) = self.가운데소리 {
             out.push(j.into());
         }
-        if let Some(jo) = self.final_sound {
+        if let Some(jo) = self.끝소리 {
             out.push(jo.into());
         }
     }
@@ -109,42 +109,42 @@ impl CharacterState {
 
     fn apply_kv(&mut self, kv: KeyValue, opts: InputOptions) -> CharacterResult {
         match kv {
-            KeyValue::Initial { initial_sound } => self.initial_sound(initial_sound, opts),
-            KeyValue::Medial {
-                medial_sound,
+            KeyValue::첫소리 { 첫소리 } => self.첫소리(첫소리, opts),
+            KeyValue::가운데소리 {
+                가운데소리,
                 compose,
-            } => self.medial_sound(medial_sound, compose, opts),
-            KeyValue::Final { final_sound } => self.final_sound(final_sound, Some(kv), opts),
+            } => self.가운데소리(가운데소리, compose, opts),
+            KeyValue::끝소리 { 끝소리 } => self.끝소리(끝소리, Some(kv), opts),
             KeyValue::Both {
-                initial_sound,
-                final_sound,
+                첫소리,
+                끝소리,
             } => {
-                if self.initial_sound.is_some()
-                    && self.medial_sound.is_some()
-                    && self.final_sound.is_none()
+                if self.첫소리.is_some()
+                    && self.가운데소리.is_some()
+                    && self.끝소리.is_none()
                 {
-                    self.final_sound(final_sound, Some(kv), opts)
+                    self.끝소리(끝소리, Some(kv), opts)
                 } else {
-                    self.initial_sound(initial_sound, opts)
+                    self.첫소리(첫소리, opts)
                 }
             }
             KeyValue::ChoJong {
-                initial_sound,
-                final_sound,
+                첫소리,
+                끝소리,
                 first,
-            } => self.cho_jong(initial_sound, final_sound, first, opts),
+            } => self.cho_jong(첫소리, 끝소리, first, opts),
             KeyValue::ChoJung {
-                initial_sound,
-                medial_sound,
+                첫소리,
+                가운데소리,
                 first,
                 compose,
-            } => self.cho_jung(initial_sound, medial_sound, first, compose, opts),
+            } => self.cho_jung(첫소리, 가운데소리, first, compose, opts),
             KeyValue::JungJong {
-                medial_sound,
-                final_sound,
+                가운데소리,
+                끝소리,
                 first,
                 compose,
-            } => self.jung_jong(medial_sound, final_sound, first, compose, opts),
+            } => self.jung_jong(가운데소리, 끝소리, first, compose, opts),
             KeyValue::Pass(_) => CharacterResult::Consume,
         }
     }
@@ -163,205 +163,205 @@ impl CharacterState {
         }
     }
 
-    pub fn initial_sound(&mut self, initial_sound: Initial, opts: InputOptions) -> CharacterResult {
-        if let Some(prev_cho) = self.initial_sound {
-            if let Some(prev_jong) = self.final_sound {
-                if let Some(j) = initial_to_final(initial_sound) {
+    pub fn 첫소리(&mut self, 첫소리: 첫소리, opts: InputOptions) -> CharacterResult {
+        if let Some(prev_cho) = self.첫소리 {
+            if let Some(prev_jong) = self.끝소리 {
+                if let Some(j) = 첫소리_끝소리_변환(첫소리) {
                     if let Some(new_jong) = prev_jong.try_add(j, opts) {
-                        self.final_sound = Some(new_jong);
+                        self.끝소리 = Some(new_jong);
                         self.final_kv = None;
                         return CharacterResult::Consume;
                     }
                 }
                 CharacterResult::NewCharacter(Self {
-                    initial_sound: Some(initial_sound),
+                    첫소리: Some(첫소리),
                     ..Default::default()
                 })
-            } else if self.medial_sound.is_some() {
-                if let Some(j) = initial_to_final(initial_sound) {
-                    self.final_sound = Some(j);
-                    self.final_kv = Some(KeyValue::Initial { initial_sound });
+            } else if self.가운데소리.is_some() {
+                if let Some(j) = 첫소리_끝소리_변환(첫소리) {
+                    self.끝소리 = Some(j);
+                    self.final_kv = Some(KeyValue::첫소리 { 첫소리 });
                     CharacterResult::Consume
                 } else {
                     CharacterResult::NewCharacter(Self {
-                        initial_sound: Some(initial_sound),
+                        첫소리: Some(첫소리),
                         ..Default::default()
                     })
                 }
             } else {
-                if let Some(new_cho) = prev_cho.try_add(initial_sound, opts) {
-                    self.initial_sound = Some(new_cho);
+                if let Some(new_cho) = prev_cho.try_add(첫소리, opts) {
+                    self.첫소리 = Some(new_cho);
                     return CharacterResult::Consume;
                 }
                 if opts.non_initial_combi {
                     if let (Some(j1), Some(j2)) =
-                        (initial_to_final(prev_cho), initial_to_final(initial_sound))
+                        (첫소리_끝소리_변환(prev_cho), 첫소리_끝소리_변환(첫소리))
                     {
                         if let Some(new_jong) = j1.try_add(j2, opts) {
-                            self.initial_sound = None;
-                            self.final_sound = Some(new_jong);
+                            self.첫소리 = None;
+                            self.끝소리 = Some(new_jong);
                             self.final_kv = None;
                             return CharacterResult::Consume;
                         }
                     }
                 }
                 CharacterResult::NewCharacter(Self {
-                    initial_sound: Some(initial_sound),
+                    첫소리: Some(첫소리),
                     ..Default::default()
                 })
             }
-        } else if self.medial_sound.is_none() && self.final_sound.is_some() {
-            if let Some(j) = initial_to_final(initial_sound) {
-                if let Some(new_jong) = self.final_sound.unwrap().try_add(j, opts) {
-                    self.final_sound = Some(new_jong);
+        } else if self.가운데소리.is_none() && self.끝소리.is_some() {
+            if let Some(j) = 첫소리_끝소리_변환(첫소리) {
+                if let Some(new_jong) = self.끝소리.unwrap().try_add(j, opts) {
+                    self.끝소리 = Some(new_jong);
                     self.final_kv = None;
                     return CharacterResult::Consume;
                 }
             }
             CharacterResult::NewCharacter(Self {
-                initial_sound: Some(initial_sound),
+                첫소리: Some(첫소리),
                 ..Default::default()
             })
-        } else if opts.auto_reorder || (self.medial_sound.is_none() && self.final_sound.is_none()) {
-            self.initial_sound = Some(initial_sound);
+        } else if opts.auto_reorder || (self.가운데소리.is_none() && self.끝소리.is_none()) {
+            self.첫소리 = Some(첫소리);
             CharacterResult::Consume
         } else {
             CharacterResult::NewCharacter(Self {
-                initial_sound: Some(initial_sound),
+                첫소리: Some(첫소리),
                 ..Default::default()
             })
         }
     }
 
-    pub fn medial_sound(
+    pub fn 가운데소리(
         &mut self,
-        medial_sound: Medial,
+        가운데소리: 가운데소리,
         compose: bool,
         opts: InputOptions,
     ) -> CharacterResult {
-        if let Some(j) = self.final_sound {
+        if let Some(j) = self.끝소리 {
             if opts.treat_final_as_initial {
                 let (new_jong, next_cho) = self.calculate_jongseong_move(j, opts);
-                let next_history = vec![KeyValue::Initial {
-                    initial_sound: next_cho,
+                let next_history = vec![KeyValue::첫소리 {
+                    첫소리: next_cho,
                 }];
                 let next = Self {
-                    initial_sound: Some(next_cho),
-                    medial_sound: Some(medial_sound),
+                    첫소리: Some(next_cho),
+                    가운데소리: Some(가운데소리),
                     compose_jung: compose,
                     history: next_history,
                     ..Default::default()
                 };
-                self.final_sound = new_jong;
+                self.끝소리 = new_jong;
                 self.final_kv = None;
                 return CharacterResult::NewCharacter(next);
             }
             CharacterResult::NewCharacter(Self {
-                medial_sound: Some(medial_sound),
+                가운데소리: Some(가운데소리),
                 compose_jung: compose,
                 ..Default::default()
             })
-        } else if let Some(prev) = self.medial_sound {
+        } else if let Some(prev) = self.가운데소리 {
             if let Some(new) =
-                Self::try_add_jungseong(prev, self.compose_jung, medial_sound, compose, opts)
+                Self::try_add_jungseong(prev, self.compose_jung, 가운데소리, compose, opts)
             {
-                self.medial_sound = Some(new);
+                self.가운데소리 = Some(new);
                 self.compose_jung = true;
                 CharacterResult::Consume
             } else {
                 CharacterResult::NewCharacter(Self {
-                    medial_sound: Some(medial_sound),
+                    가운데소리: Some(가운데소리),
                     compose_jung: compose,
                     ..Default::default()
                 })
             }
-        } else if self.initial_sound.is_none() && !opts.auto_reorder {
+        } else if self.첫소리.is_none() && !opts.auto_reorder {
             CharacterResult::NewCharacter(Self {
-                medial_sound: Some(medial_sound),
+                가운데소리: Some(가운데소리),
                 compose_jung: compose,
                 ..Default::default()
             })
         } else {
-            self.medial_sound = Some(medial_sound);
+            self.가운데소리 = Some(가운데소리);
             self.compose_jung = compose;
             CharacterResult::Consume
         }
     }
 
-    fn calculate_jongseong_move(&self, j: Final, opts: InputOptions) -> (Option<Final>, Initial) {
-        if let Some(KeyValue::Both { initial_sound, .. }) = self.final_kv {
-            return (None, initial_sound);
+    fn calculate_jongseong_move(&self, j: 끝소리, opts: InputOptions) -> (Option<끝소리>, 첫소리) {
+        if let Some(KeyValue::Both { 첫소리, .. }) = self.final_kv {
+            return (None, 첫소리);
         }
-        if let Some(KeyValue::Initial { initial_sound }) = self.final_kv {
-            return (None, initial_sound);
+        if let Some(KeyValue::첫소리 { 첫소리 }) = self.final_kv {
+            return (None, 첫소리);
         }
 
         match j.to_initial() {
-            FinalToInitial::Direct(c) => {
-                if c == Initial::이응 {
-                    return (Some(j), Initial::이응);
+            끝소리To첫소리::Direct(c) => {
+                if c == 첫소리::이응 {
+                    return (Some(j), 첫소리::이응);
                 }
                 if opts.combi_on_double_stroke {
-                    let is_ssang = matches!(c, Initial::된기윽 | Initial::된시읏);
+                    let is_ssang = matches!(c, 첫소리::된기윽 | 첫소리::된시읏);
                     if is_ssang && !self.is_last_kv_ssang() {
                         match c {
-                            Initial::된기윽 => return (Some(Final::기윽), Initial::기윽),
-                            Initial::된시읏 => return (Some(Final::시읏), Initial::시읏),
+                            첫소리::된기윽 => return (Some(끝소리::기윽), 첫소리::기윽),
+                            첫소리::된시읏 => return (Some(끝소리::시읏), 첫소리::시읏),
                             _ => {}
                         }
                     }
                 }
                 (None, c)
             }
-            FinalToInitial::Compose(jo, c) => (Some(jo), c),
+            끝소리To첫소리::Compose(jo, c) => (Some(jo), c),
         }
     }
 
     fn is_last_kv_ssang(&self) -> bool {
         self.history.last().is_some_and(|kv| match kv {
-            KeyValue::Both { initial_sound, .. } => matches!(
-                initial_sound,
-                Initial::된기윽
-                    | Initial::된시읏
-                    | Initial::된디읃
-                    | Initial::된비읍
-                    | Initial::된지읒
+            KeyValue::Both { 첫소리, .. } => matches!(
+                첫소리,
+                첫소리::된기윽
+                    | 첫소리::된시읏
+                    | 첫소리::된디읃
+                    | 첫소리::된비읍
+                    | 첫소리::된지읒
             ),
-            KeyValue::Initial { initial_sound } => matches!(
-                initial_sound,
-                Initial::된기윽
-                    | Initial::된시읏
-                    | Initial::된디읃
-                    | Initial::된비읍
-                    | Initial::된지읒
+            KeyValue::첫소리 { 첫소리 } => matches!(
+                첫소리,
+                첫소리::된기윽
+                    | 첫소리::된시읏
+                    | 첫소리::된디읃
+                    | 첫소리::된비읍
+                    | 첫소리::된지읒
             ),
-            KeyValue::Final { final_sound } => {
-                matches!(final_sound, Final::된기윽 | Final::된시읏)
+            KeyValue::끝소리 { 끝소리 } => {
+                matches!(끝소리, 끝소리::된기윽 | 끝소리::된시읏)
             }
             _ => false,
         })
     }
 
-    pub fn final_sound(
+    pub fn 끝소리(
         &mut self,
-        final_sound: Final,
+        끝소리: 끝소리,
         kv: Option<KeyValue>,
         opts: InputOptions,
     ) -> CharacterResult {
-        if let Some(prev) = self.final_sound {
-            if let Some(new) = prev.try_add(final_sound, opts) {
-                self.final_sound = Some(new);
+        if let Some(prev) = self.끝소리 {
+            if let Some(new) = prev.try_add(끝소리, opts) {
+                self.끝소리 = Some(new);
                 self.final_kv = None;
                 CharacterResult::Consume
             } else {
                 CharacterResult::NewCharacter(Self {
-                    final_sound: Some(final_sound),
+                    끝소리: Some(끝소리),
                     final_kv: kv,
                     ..Default::default()
                 })
             }
         } else {
-            self.final_sound = Some(final_sound);
+            self.끝소리 = Some(끝소리);
             self.final_kv = kv;
             CharacterResult::Consume
         }
@@ -369,28 +369,28 @@ impl CharacterState {
 
     pub fn cho_jong(
         &mut self,
-        initial_sound: Initial,
-        final_sound: Final,
+        첫소리: 첫소리,
+        끝소리: 끝소리,
         _first: bool,
         opts: InputOptions,
     ) -> CharacterResult {
-        let ret = self.initial_sound(initial_sound, opts);
+        let ret = self.첫소리(첫소리, opts);
         match ret {
-            CharacterResult::Consume => self.final_sound(
-                final_sound,
+            CharacterResult::Consume => self.끝소리(
+                끝소리,
                 Some(KeyValue::ChoJong {
-                    initial_sound,
-                    final_sound,
+                    첫소리,
+                    끝소리,
                     first: _first,
                 }),
                 opts,
             ),
             CharacterResult::NewCharacter(mut next) => {
-                next.final_sound(
-                    final_sound,
+                next.끝소리(
+                    끝소리,
                     Some(KeyValue::ChoJong {
-                        initial_sound,
-                        final_sound,
+                        첫소리,
+                        끝소리,
                         first: _first,
                     }),
                     opts,
@@ -402,53 +402,53 @@ impl CharacterState {
 
     pub fn cho_jung(
         &mut self,
-        initial_sound: Initial,
-        medial_sound: Medial,
+        첫소리: 첫소리,
+        가운데소리: 가운데소리,
         first: bool,
         compose: bool,
         opts: InputOptions,
     ) -> CharacterResult {
         if first {
-            let ret = self.initial_sound(initial_sound, opts);
+            let ret = self.첫소리(첫소리, opts);
             match ret {
-                CharacterResult::Consume => self.medial_sound(medial_sound, compose, opts),
+                CharacterResult::Consume => self.가운데소리(가운데소리, compose, opts),
                 CharacterResult::NewCharacter(mut next) => {
-                    next.medial_sound(medial_sound, compose, opts);
+                    next.가운데소리(가운데소리, compose, opts);
                     CharacterResult::NewCharacter(next)
                 }
             }
         } else {
-            self.medial_sound(medial_sound, compose, opts)
+            self.가운데소리(가운데소리, compose, opts)
         }
     }
 
     pub fn jung_jong(
         &mut self,
-        medial_sound: Medial,
-        final_sound: Final,
+        가운데소리: 가운데소리,
+        끝소리: 끝소리,
         first: bool,
         compose: bool,
         opts: InputOptions,
     ) -> CharacterResult {
         if first {
-            let ret = self.medial_sound(medial_sound, compose, opts);
+            let ret = self.가운데소리(가운데소리, compose, opts);
             match ret {
-                CharacterResult::Consume => self.final_sound(
-                    final_sound,
+                CharacterResult::Consume => self.끝소리(
+                    끝소리,
                     Some(KeyValue::JungJong {
-                        medial_sound,
-                        final_sound,
+                        가운데소리,
+                        끝소리,
                         first,
                         compose,
                     }),
                     opts,
                 ),
                 CharacterResult::NewCharacter(mut next) => {
-                    next.final_sound(
-                        final_sound,
+                    next.끝소리(
+                        끝소리,
                         Some(KeyValue::JungJong {
-                            medial_sound,
-                            final_sound,
+                            가운데소리,
+                            끝소리,
                             first,
                             compose,
                         }),
@@ -458,11 +458,11 @@ impl CharacterState {
                 }
             }
         } else {
-            self.final_sound(
-                final_sound,
+            self.끝소리(
+                끝소리,
                 Some(KeyValue::JungJong {
-                    medial_sound,
-                    final_sound,
+                    가운데소리,
+                    끝소리,
                     first,
                     compose,
                 }),
@@ -472,25 +472,25 @@ impl CharacterState {
     }
 
     fn try_add_jungseong(
-        ori_jung: Medial,
+        ori_jung: 가운데소리,
         ori_compose: bool,
-        medial_sound: Medial,
+        가운데소리: 가운데소리,
         compose: bool,
         opts: InputOptions,
-    ) -> Option<Medial> {
+    ) -> Option<가운데소리> {
         if !opts.medial_combi {
             return None;
         }
         if opts.auto_reorder {
             if ori_compose || compose {
                 ori_jung
-                    .try_add(medial_sound, opts)
-                    .or_else(|| medial_sound.try_add(ori_jung, opts))
+                    .try_add(가운데소리, opts)
+                    .or_else(|| 가운데소리.try_add(ori_jung, opts))
             } else {
                 None
             }
         } else if ori_compose {
-            ori_jung.try_add(medial_sound, opts)
+            ori_jung.try_add(가운데소리, opts)
         } else {
             None
         }
@@ -507,11 +507,11 @@ mod tests {
         let opts = InputOptions::default();
 
         let k = KeyValue::Both {
-            initial_sound: Initial::키읔,
-            final_sound: Final::기윽,
+            첫소리: 첫소리::키읔,
+            끝소리: 끝소리::기윽,
         };
-        let a = KeyValue::Medial {
-            medial_sound: Medial::아,
+        let a = KeyValue::가운데소리 {
+            가운데소리: 가운데소리::아,
             compose: true,
         };
 

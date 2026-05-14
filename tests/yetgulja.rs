@@ -20,7 +20,7 @@ fn test_yetgulja_combinations() {
     // f: ㄴ (니은)
     // S-f: ᅝ (니은히읗)
 
-    // Process ㄴ (f) then ㄱ (s) -> should combine to ᄓ (Initial::니은기윽)
+    // Process ㄴ (f) then ㄱ (s) -> should combine to ᄓ (첫소리::니은기윽)
     ic.process('f');
     assert_eq!(ic.preedit_string(), "ㄴ");
     ic.process('s');

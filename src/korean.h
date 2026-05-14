@@ -25,8 +25,8 @@ enum {
   KOREAN_IC_OPTION_WORD_UNIT_COMMIT = 5
 };
 
-enum { KOREAN_INITIAL_FILLER = 0x115F };
-enum { KOREAN_MEDIAL_FILLER = 0x1160 };
+enum { KOREAN_첫소리_FILLER = 0x115F };
+enum { KOREAN_가운데소리_FILLER = 0x1160 };
 
 bool korean_is_initial(ucschar c);
 bool korean_is_medial(ucschar c);
@@ -39,10 +39,10 @@ bool korean_is_syllable(ucschar c);
 bool korean_is_initial_sound(ucschar c);
 bool korean_is_cjamo(ucschar c);
 ucschar korean_initial_sound_to_compat_initial(ucschar ch);
-ucschar korean_initial_sound_to_syllable(ucschar initial, ucschar medial,
-                                         ucschar final);
-void korean_syllable_to_initial_sound(ucschar syllable, ucschar *initial,
-                                      ucschar *medial, ucschar *final);
+ucschar korean_initial_sound_to_syllable(ucschar 첫소리, ucschar 가운데소리,
+                                         ucschar 끝소리);
+void korean_syllable_to_initial_sound(ucschar syllable, ucschar *첫소리,
+                                      ucschar *가운데소리, ucschar *끝소리);
 
 unsigned int korean_keyboard_list_get_count(void);
 const char *korean_keyboard_list_get_keyboard_id(unsigned int index);

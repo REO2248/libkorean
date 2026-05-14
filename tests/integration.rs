@@ -1,8 +1,8 @@
 //! Comprehensive integration tests
 
 use korean::char_utils::{
-    initial_sound_to_compat_initial, is_cjamo, is_final, is_initial, is_medial, is_syllable,
-    syllable_to_initial_sound,
+    첫소리_호환_첫소리로_변환, is_cjamo, is_final, is_initial, is_medial, is_syllable,
+    음절_첫소리로_변환,
 };
 use korean::input_context::{InputContext, InputEvent, InputOption};
 
@@ -435,9 +435,9 @@ fn test_korean_ic_non_choseong_combi() {
 
 #[test]
 fn test_korean_jamo_to_cjamo() {
-    assert_eq!(initial_sound_to_compat_initial('\u{11F2}'), '\u{3183}');
-    assert_eq!(initial_sound_to_compat_initial('\u{A971}'), '\u{316F}');
-    assert_eq!(initial_sound_to_compat_initial('\u{D7F9}'), '\u{3149}');
+    assert_eq!(첫소리_호환_첫소리로_변환('\u{11F2}'), '\u{3183}');
+    assert_eq!(첫소리_호환_첫소리로_변환('\u{A971}'), '\u{316F}');
+    assert_eq!(첫소리_호환_첫소리로_변환('\u{D7F9}'), '\u{3149}');
 }
 
 // ============================================================================
@@ -472,7 +472,7 @@ fn test_syllable_decomposition() {
     ];
 
     for (syl, expected) in tests {
-        let result = syllable_to_initial_sound(syl).unwrap();
+        let result = 음절_첫소리로_변환(syl).unwrap();
         assert_eq!(result, expected, "Failed for {}", syl);
     }
 }

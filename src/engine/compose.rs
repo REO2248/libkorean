@@ -1,7 +1,7 @@
-use super::jamo::{initial_to_final, Final, Initial, InputOptions, Medial};
+use super::jamo::{첫소리_끝소리_변환, 끝소리, 첫소리, InputOptions, 가운데소리};
 use num_traits::FromPrimitive;
 use std::str::FromStr;
-impl Initial {
+impl 첫소리 {
     pub const FILLER: char = '\u{115F}';
 
     pub const fn is_old(self) -> bool {
@@ -9,42 +9,42 @@ impl Initial {
     }
 
     #[must_use]
-    pub fn compose(self, medial_sound: Medial, final_sound: Option<Final>) -> String {
+    pub fn compose(self, 가운데소리: 가운데소리, 끝소리: Option<끝소리>) -> String {
         let mut s = String::new();
         if (self as u32) < 19
-            && (medial_sound as u32) < 21
-            && final_sound.is_none_or(|j| (j as u32) < 27)
+            && (가운데소리 as u32) < 21
+            && 끝소리.is_none_or(|j| (j as u32) < 27)
         {
             s.push(unsafe {
                 std::char::from_u32_unchecked(
                     0xAC00
                         + self as u32 * 588
-                        + medial_sound as u32 * 28
-                        + final_sound.map_or(0, |j| j as u32 + 1),
+                        + 가운데소리 as u32 * 28
+                        + 끝소리.map_or(0, |j| j as u32 + 1),
                 )
             });
         } else {
             s.push(self.into());
-            s.push(medial_sound.into());
-            if let Some(j) = final_sound {
+            s.push(가운데소리.into());
+            if let Some(j) = 끝소리 {
                 s.push(j.into());
             }
         }
         s
     }
 
-    pub fn decompose(ch: char) -> Option<(Self, Medial, Option<Final>)> {
+    pub fn decompose(ch: char) -> Option<(Self, 가운데소리, Option<끝소리>)> {
         let n = ch as u32;
         let offset = n.checked_sub(0xAC00)?;
-        let initial_sound = FromPrimitive::from_u32(offset / 588)?;
+        let 첫소리 = FromPrimitive::from_u32(offset / 588)?;
         let offset = offset % 588;
-        let medial_sound = FromPrimitive::from_u32(offset / 28)?;
+        let 가운데소리 = FromPrimitive::from_u32(offset / 28)?;
         let offset = offset % 28;
-        let final_sound = match offset.checked_sub(1) {
+        let 끝소리 = match offset.checked_sub(1) {
             Some(o) => Some(FromPrimitive::from_u32(o)?),
             None => None,
         };
-        Some((initial_sound, medial_sound, final_sound))
+        Some((첫소리, 가운데소리, 끝소리))
     }
 
     pub const fn try_add(self, other: Self, opts: InputOptions) -> Option<Self> {
@@ -194,7 +194,7 @@ impl Initial {
     }
 }
 
-impl Medial {
+impl 가운데소리 {
     pub const FILLER: char = '\u{1160}';
 
     pub const fn is_old(self) -> bool {
@@ -305,7 +305,7 @@ impl Medial {
         }
     }
 }
-impl Final {
+impl 끝소리 {
     pub const fn is_old(self) -> bool {
         self as u32 > 26
     }
@@ -483,187 +483,187 @@ impl Final {
         }
     }
 
-    pub const fn to_initial(self) -> FinalToInitial {
-        use FinalToInitial::{Compose, Direct};
+    pub const fn to_initial(self) -> 끝소리To첫소리 {
+        use 끝소리To첫소리::{Compose, Direct};
         match self {
-            Self::기윽 => Direct(Initial::기윽),
-            Self::된기윽 => Direct(Initial::된기윽),
-            Self::기윽시읏 => Compose(Self::기윽, Initial::시읏),
-            Self::니은 => Direct(Initial::니은),
-            Self::니은지읒 => Compose(Self::니은, Initial::지읒),
-            Self::니은히읗 => Compose(Self::니은, Initial::히읗),
-            Self::디읃 => Direct(Initial::디읃),
-            Self::리을 => Direct(Initial::리을),
-            Self::리을기윽 => Compose(Self::리을, Initial::기윽),
-            Self::리을미음 => Compose(Self::리을, Initial::미음),
-            Self::리을비읍 => Compose(Self::리을, Initial::비읍),
-            Self::리을시읏 => Compose(Self::리을, Initial::시읏),
-            Self::리을티읕 => Compose(Self::리을, Initial::티읕),
-            Self::리을피읖 => Compose(Self::리을, Initial::피읖),
-            Self::리을히읗 => Compose(Self::리을, Initial::히읗),
-            Self::미음 => Direct(Initial::미음),
-            Self::비읍 => Direct(Initial::비읍),
-            Self::비읍시읏 => Compose(Self::비읍, Initial::시읏),
-            Self::시읏 => Direct(Initial::시읏),
-            Self::된시읏 => Direct(Initial::된시읏),
-            Self::이응 => Direct(Initial::이응),
-            Self::지읒 => Direct(Initial::지읒),
-            Self::치읓 => Direct(Initial::치읓),
-            Self::키읔 => Direct(Initial::키읔),
-            Self::티읕 => Direct(Initial::티읕),
-            Self::피읖 => Direct(Initial::피읖),
-            Self::히읗 => Direct(Initial::히읗),
-            Self::기윽리을 => Compose(Self::기윽, Initial::리을),
-            Self::기윽시읏기윽 => Compose(Self::기윽시읏, Initial::기윽),
-            Self::니은기윽 => Compose(Self::니은, Initial::기윽),
-            Self::니은디읃 => Compose(Self::니은, Initial::디읃),
-            Self::니은시읏 => Compose(Self::니은, Initial::시읏),
-            Self::니은반이소리 => Compose(Self::니은, Initial::반이소리),
-            Self::니은티읕 => Compose(Self::니은, Initial::티읕),
-            Self::디읃기윽 => Compose(Self::디읃, Initial::기윽),
-            Self::디읃리을 => Compose(Self::디읃, Initial::리을),
-            Self::리을기윽시읏 => Compose(Self::리을기윽, Initial::시읏),
-            Self::리을니은 => Compose(Self::리을, Initial::니은),
-            Self::리을디읃 => Compose(Self::리을, Initial::디읃),
-            Self::리을디읃히읗 => Compose(Self::리을디읃, Initial::히읗),
-            Self::두리을 => Compose(Self::리을, Initial::리을),
-            Self::리을미음기윽 => Compose(Self::리을미음, Initial::기윽),
-            Self::리을미음시읏 => Compose(Self::리을미음, Initial::시읏),
-            Self::리을비읍시읏 => Compose(Self::리을비읍, Initial::시읏),
-            Self::리을비읍히읗 => Compose(Self::리을비읍, Initial::히읗),
-            Self::리을가벼운비읍 => Compose(Self::리을비읍, Initial::이응),
-            Self::리을두시읏 => Compose(Self::리을시읏, Initial::시읏),
-            Self::리을반이소리 => Compose(Self::리을, Initial::반이소리),
-            Self::리을키읔 => Compose(Self::리을, Initial::키읔),
-            Self::리을목구멍터집소리 => Compose(Self::리을, Initial::목구멍터집소리),
-            Self::미음기윽 => Compose(Self::미음, Initial::기윽),
-            Self::미음리을 => Compose(Self::미음, Initial::리을),
-            Self::미음비읍 => Compose(Self::미음, Initial::비읍),
-            Self::미음시읏 => Compose(Self::미음, Initial::시읏),
-            Self::미음두시읏 => Compose(Self::미음시읏, Initial::시읏),
-            Self::미음반이소리 => Compose(Self::미음, Initial::반이소리),
-            Self::미음치읓 => Compose(Self::미음, Initial::치읓),
-            Self::미음히읗 => Compose(Self::미음, Initial::히읗),
-            Self::가벼운미음 => Compose(Self::미음, Initial::이응),
-            Self::비읍리을 => Compose(Self::비읍, Initial::리을),
-            Self::비읍피읖 => Compose(Self::비읍, Initial::피읖),
-            Self::비읍히읗 => Compose(Self::비읍, Initial::히읗),
-            Self::가벼운비읍 => Compose(Self::비읍, Initial::이응),
-            Self::시읏기윽 => Compose(Self::시읏, Initial::기윽),
-            Self::시읏디읃 => Compose(Self::시읏, Initial::디읃),
-            Self::시읏리을 => Compose(Self::시읏, Initial::리을),
-            Self::시읏비읍 => Compose(Self::시읏, Initial::비읍),
-            Self::반이소리 => Direct(Initial::반이소리),
-            Self::이응기윽 => Compose(Self::어금이소리, Initial::기윽),
-            Self::이응두기윽 => Compose(Self::어금이소리, Initial::된기윽),
-            Self::두이응 => Compose(Self::어금이소리, Initial::어금이소리),
-            Self::이응키읔 => Compose(Self::어금이소리, Initial::키읔),
-            Self::어금이소리 => Direct(Initial::어금이소리),
-            Self::어금이소리시읏 => Compose(Self::어금이소리, Initial::시읏),
-            Self::어금이소리반이소리 => Compose(Self::어금이소리, Initial::반이소리),
-            Self::피읖비읍 => Compose(Self::피읖, Initial::비읍),
-            Self::가벼운피읖 => Compose(Self::피읖, Initial::이응),
-            Self::히읗니은 => Compose(Self::히읗, Initial::니은),
-            Self::히읗리을 => Compose(Self::히읗, Initial::리을),
-            Self::히읗미음 => Compose(Self::히읗, Initial::미음),
-            Self::히읗비읍 => Compose(Self::히읗, Initial::비읍),
-            Self::목구멍터집소리 => Direct(Initial::목구멍터집소리),
-            Self::기윽니은 => Compose(Self::기윽, Initial::니은),
-            Self::기윽비읍 => Compose(Self::기윽, Initial::비읍),
-            Self::기윽치읓 => Compose(Self::기윽, Initial::치읓),
-            Self::기윽키읔 => Compose(Self::기윽, Initial::키읔),
-            Self::기윽히읗 => Compose(Self::기윽, Initial::히읗),
-            Self::두니은 => Compose(Self::니은, Initial::니은),
-            Self::니은리을 => Compose(Self::니은, Initial::리을),
-            Self::니은치읓 => Compose(Self::니은, Initial::치읓),
-            Self::두디읃 => Compose(Self::디읃, Initial::디읃),
-            Self::두디읃비읍 => Compose(Self::두디읃, Initial::비읍),
-            Self::디읃비읍 => Compose(Self::디읃, Initial::비읍),
-            Self::디읃시읏 => Compose(Self::디읃, Initial::시읏),
-            Self::디읃시읏기윽 => Compose(Self::디읃시읏, Initial::기윽),
-            Self::디읃지읒 => Compose(Self::디읃, Initial::지읒),
-            Self::디읃치읓 => Compose(Self::디읃, Initial::치읓),
-            Self::디읃티읕 => Compose(Self::디읃, Initial::티읕),
-            Self::리을두기윽 => Compose(Self::리을기윽, Initial::기윽),
-            Self::리을기윽히읗 => Compose(Self::리을기윽, Initial::히읗),
-            Self::두리을키읔 => Compose(Self::두리을, Initial::키읔),
-            Self::리을미음히읗 => Compose(Self::리을미음, Initial::히읗),
-            Self::리을비읍디읃 => Compose(Self::리을비읍, Initial::디읃),
-            Self::리을비읍피읖 => Compose(Self::리을비읍, Initial::피읖),
-            Self::리을어금이소리 => Compose(Self::리을, Initial::어금이소리),
+            Self::기윽 => Direct(첫소리::기윽),
+            Self::된기윽 => Direct(첫소리::된기윽),
+            Self::기윽시읏 => Compose(Self::기윽, 첫소리::시읏),
+            Self::니은 => Direct(첫소리::니은),
+            Self::니은지읒 => Compose(Self::니은, 첫소리::지읒),
+            Self::니은히읗 => Compose(Self::니은, 첫소리::히읗),
+            Self::디읃 => Direct(첫소리::디읃),
+            Self::리을 => Direct(첫소리::리을),
+            Self::리을기윽 => Compose(Self::리을, 첫소리::기윽),
+            Self::리을미음 => Compose(Self::리을, 첫소리::미음),
+            Self::리을비읍 => Compose(Self::리을, 첫소리::비읍),
+            Self::리을시읏 => Compose(Self::리을, 첫소리::시읏),
+            Self::리을티읕 => Compose(Self::리을, 첫소리::티읕),
+            Self::리을피읖 => Compose(Self::리을, 첫소리::피읖),
+            Self::리을히읗 => Compose(Self::리을, 첫소리::히읗),
+            Self::미음 => Direct(첫소리::미음),
+            Self::비읍 => Direct(첫소리::비읍),
+            Self::비읍시읏 => Compose(Self::비읍, 첫소리::시읏),
+            Self::시읏 => Direct(첫소리::시읏),
+            Self::된시읏 => Direct(첫소리::된시읏),
+            Self::이응 => Direct(첫소리::이응),
+            Self::지읒 => Direct(첫소리::지읒),
+            Self::치읓 => Direct(첫소리::치읓),
+            Self::키읔 => Direct(첫소리::키읔),
+            Self::티읕 => Direct(첫소리::티읕),
+            Self::피읖 => Direct(첫소리::피읖),
+            Self::히읗 => Direct(첫소리::히읗),
+            Self::기윽리을 => Compose(Self::기윽, 첫소리::리을),
+            Self::기윽시읏기윽 => Compose(Self::기윽시읏, 첫소리::기윽),
+            Self::니은기윽 => Compose(Self::니은, 첫소리::기윽),
+            Self::니은디읃 => Compose(Self::니은, 첫소리::디읃),
+            Self::니은시읏 => Compose(Self::니은, 첫소리::시읏),
+            Self::니은반이소리 => Compose(Self::니은, 첫소리::반이소리),
+            Self::니은티읕 => Compose(Self::니은, 첫소리::티읕),
+            Self::디읃기윽 => Compose(Self::디읃, 첫소리::기윽),
+            Self::디읃리을 => Compose(Self::디읃, 첫소리::리을),
+            Self::리을기윽시읏 => Compose(Self::리을기윽, 첫소리::시읏),
+            Self::리을니은 => Compose(Self::리을, 첫소리::니은),
+            Self::리을디읃 => Compose(Self::리을, 첫소리::디읃),
+            Self::리을디읃히읗 => Compose(Self::리을디읃, 첫소리::히읗),
+            Self::두리을 => Compose(Self::리을, 첫소리::리을),
+            Self::리을미음기윽 => Compose(Self::리을미음, 첫소리::기윽),
+            Self::리을미음시읏 => Compose(Self::리을미음, 첫소리::시읏),
+            Self::리을비읍시읏 => Compose(Self::리을비읍, 첫소리::시읏),
+            Self::리을비읍히읗 => Compose(Self::리을비읍, 첫소리::히읗),
+            Self::리을가벼운비읍 => Compose(Self::리을비읍, 첫소리::이응),
+            Self::리을두시읏 => Compose(Self::리을시읏, 첫소리::시읏),
+            Self::리을반이소리 => Compose(Self::리을, 첫소리::반이소리),
+            Self::리을키읔 => Compose(Self::리을, 첫소리::키읔),
+            Self::리을목구멍터집소리 => Compose(Self::리을, 첫소리::목구멍터집소리),
+            Self::미음기윽 => Compose(Self::미음, 첫소리::기윽),
+            Self::미음리을 => Compose(Self::미음, 첫소리::리을),
+            Self::미음비읍 => Compose(Self::미음, 첫소리::비읍),
+            Self::미음시읏 => Compose(Self::미음, 첫소리::시읏),
+            Self::미음두시읏 => Compose(Self::미음시읏, 첫소리::시읏),
+            Self::미음반이소리 => Compose(Self::미음, 첫소리::반이소리),
+            Self::미음치읓 => Compose(Self::미음, 첫소리::치읓),
+            Self::미음히읗 => Compose(Self::미음, 첫소리::히읗),
+            Self::가벼운미음 => Compose(Self::미음, 첫소리::이응),
+            Self::비읍리을 => Compose(Self::비읍, 첫소리::리을),
+            Self::비읍피읖 => Compose(Self::비읍, 첫소리::피읖),
+            Self::비읍히읗 => Compose(Self::비읍, 첫소리::히읗),
+            Self::가벼운비읍 => Compose(Self::비읍, 첫소리::이응),
+            Self::시읏기윽 => Compose(Self::시읏, 첫소리::기윽),
+            Self::시읏디읃 => Compose(Self::시읏, 첫소리::디읃),
+            Self::시읏리을 => Compose(Self::시읏, 첫소리::리을),
+            Self::시읏비읍 => Compose(Self::시읏, 첫소리::비읍),
+            Self::반이소리 => Direct(첫소리::반이소리),
+            Self::이응기윽 => Compose(Self::어금이소리, 첫소리::기윽),
+            Self::이응두기윽 => Compose(Self::어금이소리, 첫소리::된기윽),
+            Self::두이응 => Compose(Self::어금이소리, 첫소리::어금이소리),
+            Self::이응키읔 => Compose(Self::어금이소리, 첫소리::키읔),
+            Self::어금이소리 => Direct(첫소리::어금이소리),
+            Self::어금이소리시읏 => Compose(Self::어금이소리, 첫소리::시읏),
+            Self::어금이소리반이소리 => Compose(Self::어금이소리, 첫소리::반이소리),
+            Self::피읖비읍 => Compose(Self::피읖, 첫소리::비읍),
+            Self::가벼운피읖 => Compose(Self::피읖, 첫소리::이응),
+            Self::히읗니은 => Compose(Self::히읗, 첫소리::니은),
+            Self::히읗리을 => Compose(Self::히읗, 첫소리::리을),
+            Self::히읗미음 => Compose(Self::히읗, 첫소리::미음),
+            Self::히읗비읍 => Compose(Self::히읗, 첫소리::비읍),
+            Self::목구멍터집소리 => Direct(첫소리::목구멍터집소리),
+            Self::기윽니은 => Compose(Self::기윽, 첫소리::니은),
+            Self::기윽비읍 => Compose(Self::기윽, 첫소리::비읍),
+            Self::기윽치읓 => Compose(Self::기윽, 첫소리::치읓),
+            Self::기윽키읔 => Compose(Self::기윽, 첫소리::키읔),
+            Self::기윽히읗 => Compose(Self::기윽, 첫소리::히읗),
+            Self::두니은 => Compose(Self::니은, 첫소리::니은),
+            Self::니은리을 => Compose(Self::니은, 첫소리::리을),
+            Self::니은치읓 => Compose(Self::니은, 첫소리::치읓),
+            Self::두디읃 => Compose(Self::디읃, 첫소리::디읃),
+            Self::두디읃비읍 => Compose(Self::두디읃, 첫소리::비읍),
+            Self::디읃비읍 => Compose(Self::디읃, 첫소리::비읍),
+            Self::디읃시읏 => Compose(Self::디읃, 첫소리::시읏),
+            Self::디읃시읏기윽 => Compose(Self::디읃시읏, 첫소리::기윽),
+            Self::디읃지읒 => Compose(Self::디읃, 첫소리::지읒),
+            Self::디읃치읓 => Compose(Self::디읃, 첫소리::치읓),
+            Self::디읃티읕 => Compose(Self::디읃, 첫소리::티읕),
+            Self::리을두기윽 => Compose(Self::리을기윽, 첫소리::기윽),
+            Self::리을기윽히읗 => Compose(Self::리을기윽, 첫소리::히읗),
+            Self::두리을키읔 => Compose(Self::두리을, 첫소리::키읔),
+            Self::리을미음히읗 => Compose(Self::리을미음, 첫소리::히읗),
+            Self::리을비읍디읃 => Compose(Self::리을비읍, 첫소리::디읃),
+            Self::리을비읍피읖 => Compose(Self::리을비읍, 첫소리::피읖),
+            Self::리을어금이소리 => Compose(Self::리을, 첫소리::어금이소리),
             Self::리을목구멍터집소리히읗 => {
-                Compose(Self::리을목구멍터집소리, Initial::히읗)
+                Compose(Self::리을목구멍터집소리, 첫소리::히읗)
             }
-            Self::가벼운리을 => Compose(Self::리을, Initial::이응),
-            Self::미음니은 => Compose(Self::미음, Initial::니은),
-            Self::미음두니은 => Compose(Self::미음니은, Initial::니은),
-            Self::두미음 => Compose(Self::미음, Initial::미음),
-            Self::미음비읍시읏 => Compose(Self::미음비읍, Initial::시읏),
-            Self::미음지읒 => Compose(Self::미음, Initial::지읒),
-            Self::비읍디읃 => Compose(Self::비읍, Initial::디읃),
-            Self::비읍리을피읖 => Compose(Self::비읍리을, Initial::피읖),
-            Self::비읍미음 => Compose(Self::비읍, Initial::미음),
-            Self::두비읍 => Compose(Self::비읍, Initial::비읍),
-            Self::비읍시읏디읃 => Compose(Self::비읍시읏, Initial::디읃),
-            Self::비읍지읒 => Compose(Self::비읍, Initial::지읒),
-            Self::비읍치읓 => Compose(Self::비읍, Initial::치읓),
-            Self::시읏미음 => Compose(Self::시읏, Initial::미음),
-            Self::시읏가벼운비읍 => Compose(Self::시읏비읍, Initial::이응),
-            Self::두시읏기윽 => Compose(Self::된시읏, Initial::기윽),
-            Self::두시읏디읃 => Compose(Self::된시읏, Initial::디읃),
-            Self::시읏반이소리 => Compose(Self::시읏, Initial::반이소리),
-            Self::시읏지읒 => Compose(Self::시읏, Initial::지읒),
-            Self::시읏치읓 => Compose(Self::시읏, Initial::치읓),
-            Self::시읏티읕 => Compose(Self::시읏, Initial::티읕),
-            Self::시읏히읗 => Compose(Self::시읏, Initial::히읗),
-            Self::반이소리비읍 => Compose(Self::반이소리, Initial::비읍),
-            Self::반이소리가벼운비읍 => Compose(Self::반이소리비읍, Initial::이응),
-            Self::어금이소리미음 => Compose(Self::어금이소리, Initial::미음),
-            Self::어금이소리히읗 => Compose(Self::어금이소리, Initial::히읗),
-            Self::지읒비읍 => Compose(Self::지읒, Initial::비읍),
-            Self::지읒두비읍 => Compose(Self::지읒비읍, Initial::비읍),
-            Self::두지읒 => Compose(Self::지읒, Initial::지읒),
-            Self::피읖시읏 => Compose(Self::피읖, Initial::시읏),
-            Self::피읖티읕 => Compose(Self::피읖, Initial::티읕),
+            Self::가벼운리을 => Compose(Self::리을, 첫소리::이응),
+            Self::미음니은 => Compose(Self::미음, 첫소리::니은),
+            Self::미음두니은 => Compose(Self::미음니은, 첫소리::니은),
+            Self::두미음 => Compose(Self::미음, 첫소리::미음),
+            Self::미음비읍시읏 => Compose(Self::미음비읍, 첫소리::시읏),
+            Self::미음지읒 => Compose(Self::미음, 첫소리::지읒),
+            Self::비읍디읃 => Compose(Self::비읍, 첫소리::디읃),
+            Self::비읍리을피읖 => Compose(Self::비읍리을, 첫소리::피읖),
+            Self::비읍미음 => Compose(Self::비읍, 첫소리::미음),
+            Self::두비읍 => Compose(Self::비읍, 첫소리::비읍),
+            Self::비읍시읏디읃 => Compose(Self::비읍시읏, 첫소리::디읃),
+            Self::비읍지읒 => Compose(Self::비읍, 첫소리::지읒),
+            Self::비읍치읓 => Compose(Self::비읍, 첫소리::치읓),
+            Self::시읏미음 => Compose(Self::시읏, 첫소리::미음),
+            Self::시읏가벼운비읍 => Compose(Self::시읏비읍, 첫소리::이응),
+            Self::두시읏기윽 => Compose(Self::된시읏, 첫소리::기윽),
+            Self::두시읏디읃 => Compose(Self::된시읏, 첫소리::디읃),
+            Self::시읏반이소리 => Compose(Self::시읏, 첫소리::반이소리),
+            Self::시읏지읒 => Compose(Self::시읏, 첫소리::지읒),
+            Self::시읏치읓 => Compose(Self::시읏, 첫소리::치읓),
+            Self::시읏티읕 => Compose(Self::시읏, 첫소리::티읕),
+            Self::시읏히읗 => Compose(Self::시읏, 첫소리::히읗),
+            Self::반이소리비읍 => Compose(Self::반이소리, 첫소리::비읍),
+            Self::반이소리가벼운비읍 => Compose(Self::반이소리비읍, 첫소리::이응),
+            Self::어금이소리미음 => Compose(Self::어금이소리, 첫소리::미음),
+            Self::어금이소리히읗 => Compose(Self::어금이소리, 첫소리::히읗),
+            Self::지읒비읍 => Compose(Self::지읒, 첫소리::비읍),
+            Self::지읒두비읍 => Compose(Self::지읒비읍, 첫소리::비읍),
+            Self::두지읒 => Compose(Self::지읒, 첫소리::지읒),
+            Self::피읖시읏 => Compose(Self::피읖, 첫소리::시읏),
+            Self::피읖티읕 => Compose(Self::피읖, 첫소리::티읕),
         }
     }
 }
 
-pub enum FinalToInitial {
-    Direct(Initial),
-    Compose(Final, Initial),
+pub enum 끝소리To첫소리 {
+    Direct(첫소리),
+    Compose(끝소리, 첫소리),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum KeyValue {
-    Initial {
-        initial_sound: Initial,
+    첫소리 {
+        첫소리: 첫소리,
     },
-    Medial {
-        medial_sound: Medial,
+    가운데소리 {
+        가운데소리: 가운데소리,
         compose: bool,
     },
-    Final {
-        final_sound: Final,
+    끝소리 {
+        끝소리: 끝소리,
     },
     Both {
-        initial_sound: Initial,
-        final_sound: Final,
+        첫소리: 첫소리,
+        끝소리: 끝소리,
     },
     ChoJong {
-        initial_sound: Initial,
-        final_sound: Final,
+        첫소리: 첫소리,
+        끝소리: 끝소리,
         first: bool,
     },
     ChoJung {
-        initial_sound: Initial,
-        medial_sound: Medial,
+        첫소리: 첫소리,
+        가운데소리: 가운데소리,
         first: bool,
         compose: bool,
     },
     JungJong {
-        medial_sound: Medial,
-        final_sound: Final,
+        가운데소리: 가운데소리,
+        끝소리: 끝소리,
         first: bool,
         compose: bool,
     },
@@ -673,28 +673,28 @@ pub enum KeyValue {
 impl KeyValue {
     pub const fn has_old_jamo(&self) -> bool {
         match self {
-            Self::Initial { initial_sound } => initial_sound.is_old(),
-            Self::Medial { medial_sound, .. } => medial_sound.is_old(),
-            Self::Final { final_sound } => final_sound.is_old(),
+            Self::첫소리 { 첫소리 } => 첫소리.is_old(),
+            Self::가운데소리 { 가운데소리, .. } => 가운데소리.is_old(),
+            Self::끝소리 { 끝소리 } => 끝소리.is_old(),
             Self::Both {
-                initial_sound,
-                final_sound,
-            } => initial_sound.is_old() || final_sound.is_old(),
+                첫소리,
+                끝소리,
+            } => 첫소리.is_old() || 끝소리.is_old(),
             Self::ChoJong {
-                initial_sound,
-                final_sound,
+                첫소리,
+                끝소리,
                 ..
-            } => initial_sound.is_old() || final_sound.is_old(),
+            } => 첫소리.is_old() || 끝소리.is_old(),
             Self::ChoJung {
-                initial_sound,
-                medial_sound,
+                첫소리,
+                가운데소리,
                 ..
-            } => initial_sound.is_old() || medial_sound.is_old(),
+            } => 첫소리.is_old() || 가운데소리.is_old(),
             Self::JungJong {
-                medial_sound,
-                final_sound,
+                가운데소리,
+                끝소리,
                 ..
-            } => medial_sound.is_old() || final_sound.is_old(),
+            } => 가운데소리.is_old() || 끝소리.is_old(),
             Self::Pass(_) => false,
         }
     }
@@ -702,9 +702,9 @@ impl KeyValue {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum KeyValuePart {
-    Cho { initial_sound: Initial },
-    Jung { medial_sound: Medial, compose: bool },
-    Jong { final_sound: Final },
+    Cho { 첫소리: 첫소리 },
+    Jung { 가운데소리: 가운데소리, compose: bool },
+    Jong { 끝소리: 끝소리 },
 }
 
 impl KeyValuePart {
@@ -712,38 +712,38 @@ impl KeyValuePart {
         use crate::char_utils::compat_to_conjoining;
 
         let to_initial = |c: char| {
-            Initial::from_initial_sound(c)
-                .or_else(|| Initial::from_initial_sound(compat_to_conjoining(c)))
+            첫소리::from_첫소리(c)
+                .or_else(|| 첫소리::from_첫소리(compat_to_conjoining(c)))
         };
         let to_medial = |c: char| {
-            Medial::from_initial_sound(c)
-                .or_else(|| Medial::from_initial_sound(compat_to_conjoining(c)))
+            가운데소리::from_첫소리(c)
+                .or_else(|| 가운데소리::from_첫소리(compat_to_conjoining(c)))
         };
         let to_final = |c: char| {
-            Final::from_initial_sound(c)
-                .or_else(|| Final::from_initial_sound(compat_to_conjoining(c)))
+            끝소리::from_첫소리(c)
+                .or_else(|| 끝소리::from_첫소리(compat_to_conjoining(c)))
         };
 
         match chars.next()? {
             '$' => {
                 let next = chars.next()?;
-                if let Some(medial_sound) = to_medial(next) {
+                if let Some(가운데소리) = to_medial(next) {
                     Some(Self::Jung {
-                        medial_sound,
+                        가운데소리,
                         compose: false,
                     })
                 } else {
                     Some(Self::Jong {
-                        final_sound: to_final(next)?,
+                        끝소리: to_final(next)?,
                     })
                 }
             }
             c => {
-                if let Some(initial_sound) = to_initial(c) {
-                    Some(Self::Cho { initial_sound })
+                if let Some(첫소리) = to_initial(c) {
+                    Some(Self::Cho { 첫소리 })
                 } else {
                     Some(Self::Jung {
-                        medial_sound: to_medial(c)?,
+                        가운데소리: to_medial(c)?,
                         compose: true,
                     })
                 }
@@ -762,28 +762,28 @@ impl FromStr for KeyValue {
         match next() {
             None => Ok(Self::Pass(s.chars().next().ok_or(())?)),
             Some(first) => match first {
-                KeyValuePart::Cho { initial_sound } => match next() {
-                    Some(KeyValuePart::Jong { final_sound }) => Ok(Self::Both {
-                        initial_sound,
-                        final_sound,
+                KeyValuePart::Cho { 첫소리 } => match next() {
+                    Some(KeyValuePart::Jong { 끝소리 }) => Ok(Self::Both {
+                        첫소리,
+                        끝소리,
                     }),
                     Some(KeyValuePart::Jung {
-                        medial_sound,
+                        가운데소리,
                         compose,
                     }) => Ok(Self::ChoJung {
-                        initial_sound,
-                        medial_sound,
+                        첫소리,
+                        가운데소리,
                         first: true,
                         compose,
                     }),
                     None => {
-                        // Check if it's also a valid final_sound
-                        initial_to_final(initial_sound).map_or(
-                            Ok(Self::Initial { initial_sound }),
-                            |final_sound| {
+                        // Check if it's also a valid 끝소리
+                        첫소리_끝소리_변환(첫소리).map_or(
+                            Ok(Self::첫소리 { 첫소리 }),
+                            |끝소리| {
                                 Ok(Self::Both {
-                                    initial_sound,
-                                    final_sound,
+                                    첫소리,
+                                    끝소리,
                                 })
                             },
                         )
@@ -791,42 +791,42 @@ impl FromStr for KeyValue {
                     _ => Err(()),
                 },
                 KeyValuePart::Jung {
-                    medial_sound,
+                    가운데소리,
                     compose,
                 } => match next() {
-                    Some(KeyValuePart::Cho { initial_sound }) => Ok(Self::ChoJung {
-                        initial_sound,
-                        medial_sound,
+                    Some(KeyValuePart::Cho { 첫소리 }) => Ok(Self::ChoJung {
+                        첫소리,
+                        가운데소리,
                         first: false,
                         compose,
                     }),
-                    Some(KeyValuePart::Jong { final_sound }) => Ok(Self::JungJong {
-                        medial_sound,
-                        final_sound,
+                    Some(KeyValuePart::Jong { 끝소리 }) => Ok(Self::JungJong {
+                        가운데소리,
+                        끝소리,
                         first: true,
                         compose,
                     }),
-                    None => Ok(Self::Medial {
-                        medial_sound,
+                    None => Ok(Self::가운데소리 {
+                        가운데소리,
                         compose,
                     }),
                     _ => Err(()),
                 },
-                KeyValuePart::Jong { final_sound } => match next() {
-                    Some(KeyValuePart::Cho { initial_sound }) => Ok(Self::Both {
-                        initial_sound,
-                        final_sound,
+                KeyValuePart::Jong { 끝소리 } => match next() {
+                    Some(KeyValuePart::Cho { 첫소리 }) => Ok(Self::Both {
+                        첫소리,
+                        끝소리,
                     }),
                     Some(KeyValuePart::Jung {
-                        medial_sound,
+                        가운데소리,
                         compose,
                     }) => Ok(Self::JungJong {
-                        medial_sound,
-                        final_sound,
+                        가운데소리,
+                        끝소리,
                         first: false,
                         compose,
                     }),
-                    None => Ok(Self::Final { final_sound }),
+                    None => Ok(Self::끝소리 { 끝소리 }),
                     _ => Err(()),
                 },
             },
@@ -840,11 +840,11 @@ mod tests {
 
     #[test]
     fn test_compose_decompose() {
-        let (initial_sound, medial_sound, final_sound) = Initial::decompose('앙').unwrap();
-        assert_eq!(initial_sound, Initial::이응);
-        assert_eq!(medial_sound, Medial::아);
-        assert_eq!(final_sound, Some(Final::이응));
-        assert_eq!(initial_sound.compose(medial_sound, final_sound), "앙");
+        let (첫소리, 가운데소리, 끝소리) = 첫소리::decompose('앙').unwrap();
+        assert_eq!(첫소리, 첫소리::이응);
+        assert_eq!(가운데소리, 가운데소리::아);
+        assert_eq!(끝소리, Some(끝소리::이응));
+        assert_eq!(첫소리.compose(가운데소리, 끝소리), "앙");
     }
 
     #[test]
@@ -852,42 +852,42 @@ mod tests {
         assert_eq!(
             "ㅇ".parse::<KeyValue>().unwrap(),
             KeyValue::Both {
-                initial_sound: Initial::이응,
-                final_sound: Final::이응
+                첫소리: 첫소리::이응,
+                끝소리: 끝소리::이응
             }
         );
         assert_eq!(
             "ㅏ".parse::<KeyValue>().unwrap(),
-            KeyValue::Medial {
-                medial_sound: Medial::아,
+            KeyValue::가운데소리 {
+                가운데소리: 가운데소리::아,
                 compose: true
             }
         );
         assert_eq!(
             "ㅋ$ㄱ".parse::<KeyValue>().unwrap(),
             KeyValue::Both {
-                initial_sound: Initial::키읔,
-                final_sound: Final::기윽,
+                첫소리: 첫소리::키읔,
+                끝소리: 끝소리::기윽,
             }
         );
     }
 
     #[test]
     fn test_old_jamo_initial() {
-        assert_eq!(char::from(Initial::목구멍터집소리), 'ᅙ');
-        assert_eq!(char::from(Initial::니은히읗), 'ᅝ');
-        assert_eq!(char::from(Initial::이머리소리시읏), 'ᄼ');
+        assert_eq!(char::from(첫소리::목구멍터집소리), 'ᅙ');
+        assert_eq!(char::from(첫소리::니은히읗), 'ᅝ');
+        assert_eq!(char::from(첫소리::이머리소리시읏), 'ᄼ');
     }
 
     #[test]
     fn test_old_jamo_medial() {
         // Araea is U+119E (Conjoining Jamo), not U+3152 (Compatibility Jamo)
-        assert_eq!(char::from(Medial::아래아), 'ᆞ');
+        assert_eq!(char::from(가운데소리::아래아), 'ᆞ');
     }
 
     #[test]
     fn test_old_jamo_final() {
-        assert_eq!(char::from(Final::목구멍터집소리), 'ᇹ');
+        assert_eq!(char::from(끝소리::목구멍터집소리), 'ᇹ');
     }
 
     #[test]
@@ -897,13 +897,13 @@ mod tests {
             combi_on_double_stroke: true,
             ..Default::default()
         };
-        assert!(Initial::기윽.try_add(Initial::기윽, opts).is_some());
+        assert!(첫소리::기윽.try_add(첫소리::기윽, opts).is_some());
 
         opts.old_jamo_mode = true;
         // Old initial combination: ᄂ + ᄒ → ᅝ
         assert_eq!(
-            Initial::니은.try_add(Initial::히읗, opts),
-            Some(Initial::니은히읗)
+            첫소리::니은.try_add(첫소리::히읗, opts),
+            Some(첫소리::니은히읗)
         );
     }
 }

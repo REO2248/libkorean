@@ -128,7 +128,7 @@ pub const fn compat_to_conjoining(c: char) -> char {
 }
 
 #[must_use]
-pub const fn initial_sound_to_compat_initial(c: char) -> char {
+pub const fn 첫소리_호환_첫소리로_변환(c: char) -> char {
     match c as u32 {
         0x1100 | 0x11A8 => '\u{3131}',
         0x1101 | 0x11A9 => '\u{3132}',
@@ -198,21 +198,21 @@ pub const fn initial_sound_to_compat_initial(c: char) -> char {
 }
 
 #[must_use]
-pub fn initial_sound_to_syllable(initial_sound: char, medial_sound: char, jo: Option<char>) -> Option<String> {
-    use crate::engine::{Initial, Final, Medial};
+pub fn 첫소리_음절로_변환(첫소리: char, 가운데소리: char, jo: Option<char>) -> Option<String> {
+    use crate::engine::{첫소리, 끝소리, 가운데소리};
     use std::convert::TryFrom;
 
-    let c = Initial::try_from(initial_sound)
+    let c = 첫소리::try_from(첫소리)
         .ok()
-        .or_else(|| Initial::from_initial_sound(initial_sound))?;
-    let v = Medial::try_from(medial_sound)
+        .or_else(|| 첫소리::from_첫소리(첫소리))?;
+    let v = 가운데소리::try_from(가운데소리)
         .ok()
-        .or_else(|| Medial::from_initial_sound(medial_sound))?;
+        .or_else(|| 가운데소리::from_첫소리(가운데소리))?;
     let t = if let Some(j) = jo {
         Some(
-            Final::try_from(j)
+            끝소리::try_from(j)
                 .ok()
-                .or_else(|| Final::from_initial_sound(j))?,
+                .or_else(|| 끝소리::from_첫소리(j))?,
         )
     } else {
         None
@@ -222,7 +222,7 @@ pub fn initial_sound_to_syllable(initial_sound: char, medial_sound: char, jo: Op
 }
 
 #[must_use]
-pub fn syllable_to_initial_sound(syl: char) -> Option<(char, char, Option<char>)> {
+pub fn 음절_첫소리로_변환(syl: char) -> Option<(char, char, Option<char>)> {
     if !is_syllable(syl) {
         return None;
     }
@@ -232,24 +232,24 @@ pub fn syllable_to_initial_sound(syl: char) -> Option<(char, char, Option<char>)
     let jung_idx = (offset / 28) % 21;
     let cho_idx = offset / (21 * 28);
 
-    let initial_sound = char::from_u32(0x1100 + cho_idx)?;
-    let medial_sound = char::from_u32(0x1161 + jung_idx)?;
+    let 첫소리 = char::from_u32(0x1100 + cho_idx)?;
+    let 가운데소리 = char::from_u32(0x1161 + jung_idx)?;
     let jo = if jong_idx != 0 {
         char::from_u32(0x11A7 + jong_idx)
     } else {
         None
     };
 
-    Some((initial_sound, medial_sound, jo))
+    Some((첫소리, 가운데소리, jo))
 }
 
 #[must_use]
 pub fn decompose_string(input: &str) -> String {
     let mut output = String::new();
     for c in input.chars() {
-        if let Some((initial_sound, medial_sound, jo)) = syllable_to_initial_sound(c) {
-            output.push(initial_sound);
-            output.push(medial_sound);
+        if let Some((첫소리, 가운데소리, jo)) = 음절_첫소리로_변환(c) {
+            output.push(첫소리);
+            output.push(가운데소리);
             if let Some(j) = jo {
                 output.push(j);
             }

@@ -184,8 +184,8 @@ impl InputContext {
                     if self.is_transliteration() && !next.has_initial() && next.has_medial() {
                         let mut final_next = CharacterState::new();
                         final_next.key(
-                            KeyValue::Initial {
-                                initial_sound: crate::engine::Initial::이응,
+                            KeyValue::첫소리 {
+                                첫소리: crate::engine::첫소리::이응,
                             },
                             self.options,
                         );
@@ -209,12 +209,12 @@ impl InputContext {
     fn apply_transliteration_rules(&mut self, mut kv: KeyValue) -> KeyValue {
         let is_consonant = matches!(
             kv,
-            KeyValue::Initial { .. } | KeyValue::Both { .. } | KeyValue::Final { .. }
+            KeyValue::첫소리 { .. } | KeyValue::Both { .. } | KeyValue::끝소리 { .. }
         );
         if is_consonant && self.state.has_initial() && !self.state.has_medial() {
             self.state.key(
-                KeyValue::Medial {
-                    medial_sound: crate::engine::Medial::으,
+                KeyValue::가운데소리 {
+                    가운데소리: crate::engine::가운데소리::으,
                     compose: true,
                 },
                 self.options,
@@ -222,22 +222,22 @@ impl InputContext {
             self.commit_syllable();
         }
 
-        if let KeyValue::Medial { .. } = kv {
+        if let KeyValue::가운데소리 { .. } = kv {
             if !self.state.has_initial() && !self.state.has_medial() && !self.state.has_final() {
                 self.state.key(
-                    KeyValue::Initial {
-                        initial_sound: crate::engine::Initial::이응,
+                    KeyValue::첫소리 {
+                        첫소리: crate::engine::첫소리::이응,
                     },
                     self.options,
                 );
             }
         }
 
-        if let KeyValue::Final { final_sound } = kv {
+        if let KeyValue::끝소리 { 끝소리 } = kv {
             if !self.state.has_initial() && !self.state.has_medial() && !self.state.has_final() {
-                if let crate::engine::FinalToInitial::Direct(next_cho) = final_sound.to_initial() {
-                    kv = KeyValue::Initial {
-                        initial_sound: next_cho,
+                if let crate::engine::끝소리To첫소리::Direct(next_cho) = 끝소리.to_initial() {
+                    kv = KeyValue::첫소리 {
+                        첫소리: next_cho,
                     };
                 }
             }
@@ -340,19 +340,19 @@ impl InputContext {
                     && !temp_state.has_medial()
                     && !temp_state.has_final()
                 {
-                    if let KeyValue::Medial { .. } = kv {
+                    if let KeyValue::가운데소리 { .. } = kv {
                         temp_state.key(
-                            KeyValue::Initial {
-                                initial_sound: crate::engine::Initial::이응,
+                            KeyValue::첫소리 {
+                                첫소리: crate::engine::첫소리::이응,
                             },
                             self.options,
                         );
-                    } else if let KeyValue::Final { final_sound } = kv {
-                        if let crate::engine::FinalToInitial::Direct(next_cho) =
-                            final_sound.to_initial()
+                    } else if let KeyValue::끝소리 { 끝소리 } = kv {
+                        if let crate::engine::끝소리To첫소리::Direct(next_cho) =
+                            끝소리.to_initial()
                         {
-                            kv = KeyValue::Initial {
-                                initial_sound: next_cho,
+                            kv = KeyValue::첫소리 {
+                                첫소리: next_cho,
                             };
                         }
                     }
@@ -370,8 +370,8 @@ impl InputContext {
                         if self.is_transliteration() && !next.has_initial() && next.has_medial() {
                             let mut final_next = CharacterState::new();
                             final_next.key(
-                                KeyValue::Initial {
-                                    initial_sound: crate::engine::Initial::이응,
+                                KeyValue::첫소리 {
+                                    첫소리: crate::engine::첫소리::이응,
                                 },
                                 self.options,
                             );

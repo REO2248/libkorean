@@ -95,27 +95,27 @@ pub extern "C" fn korean_is_cjamo(c: ucschar) -> bool {
 #[no_mangle]
 pub extern "C" fn korean_initial_sound_to_compat_initial(c: ucschar) -> ucschar {
     char::from_u32(c)
-        .map(char_utils::initial_sound_to_compat_initial)
+        .map(char_utils::첫소리_호환_첫소리로_변환)
         .map_or(c, |ch| ch as u32)
 }
 
 #[no_mangle]
 pub extern "C" fn korean_initial_sound_to_syllable(
-    initial_sound: ucschar,
-    medial_sound: ucschar,
-    final_sound: ucschar,
+    첫소리: ucschar,
+    가운데소리: ucschar,
+    끝소리: ucschar,
 ) -> ucschar {
-    let cho_c = char::from_u32(initial_sound);
-    let jung_c = char::from_u32(medial_sound);
-    let jong_c = if final_sound == 0 {
+    let cho_c = char::from_u32(첫소리);
+    let jung_c = char::from_u32(가운데소리);
+    let jong_c = if 끝소리 == 0 {
         None
     } else {
-        char::from_u32(final_sound)
+        char::from_u32(끝소리)
     };
 
     match (cho_c, jung_c) {
         (Some(c), Some(j)) => {
-            if let Some(syl_str) = char_utils::initial_sound_to_syllable(c, j, jong_c) {
+            if let Some(syl_str) = char_utils::첫소리_음절로_변환(c, j, jong_c) {
                 if syl_str.chars().count() == 1 {
                     return syl_str.chars().next().unwrap() as ucschar;
                 }
@@ -131,20 +131,20 @@ pub extern "C" fn korean_initial_sound_to_syllable(
 #[no_mangle]
 pub unsafe extern "C" fn korean_syllable_to_initial_sound(
     syl: ucschar,
-    initial_sound: *mut ucschar,
-    medial_sound: *mut ucschar,
-    final_sound: *mut ucschar,
+    첫소리: *mut ucschar,
+    가운데소리: *mut ucschar,
+    끝소리: *mut ucschar,
 ) {
     if let Some(c) = char::from_u32(syl) {
-        if let Some((c2, j, jo)) = char_utils::syllable_to_initial_sound(c) {
-            if !initial_sound.is_null() {
-                *initial_sound = c2 as u32;
+        if let Some((c2, j, jo)) = char_utils::음절_첫소리로_변환(c) {
+            if !첫소리.is_null() {
+                *첫소리 = c2 as u32;
             }
-            if !medial_sound.is_null() {
-                *medial_sound = j as u32;
+            if !가운데소리.is_null() {
+                *가운데소리 = j as u32;
             }
-            if !final_sound.is_null() {
-                *final_sound = jo.map_or(0, |j| j as u32);
+            if !끝소리.is_null() {
+                *끝소리 = jo.map_or(0, |j| j as u32);
             }
         }
     }
