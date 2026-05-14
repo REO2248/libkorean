@@ -18,6 +18,9 @@ pub const KOREAN_OUTPUT_JAMO: c_int = 1;
 pub const KOREAN_IC_OPTION_AUTO_REORDER: c_int = 0;
 pub const KOREAN_IC_OPTION_COMBI_ON_DOUBLE_STROKE: c_int = 1;
 pub const KOREAN_IC_OPTION_NON_CHOSEONG_COMBI: c_int = 2;
+pub const KOREAN_IC_OPTION_OLD_JAMO: c_int = 3;
+pub const KOREAN_IC_OPTION_NOBLE_NAME: c_int = 4;
+pub const KOREAN_IC_OPTION_WORD_UNIT_COMMIT: c_int = 5;
 
 pub const KOREAN_INITIAL_FILLER: ucschar = 0x115F;
 pub const KOREAN_MEDIAL_FILLER: ucschar = 0x1160;
@@ -285,6 +288,7 @@ pub unsafe extern "C" fn korean_ic_set_option(
         2 => InputOption::NonChoseongCombi,
         3 => InputOption::OldJamo,
         4 => InputOption::NobleName,
+        5 => InputOption::WordUnitCommit,
         _ => return,
     };
     ctx.ic.set_option(opt, value);
@@ -302,6 +306,7 @@ pub unsafe extern "C" fn korean_ic_get_option(hic: *mut KoreanInputContext, opti
         2 => InputOption::NonChoseongCombi,
         3 => InputOption::OldJamo,
         4 => InputOption::NobleName,
+        5 => InputOption::WordUnitCommit,
         _ => return false,
     };
     ctx.ic.get_option(opt)

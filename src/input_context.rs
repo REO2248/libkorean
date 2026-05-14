@@ -74,6 +74,7 @@ impl InputContext {
                 }
                 self.options.noble_name = value;
             }
+            InputOption::WordUnitCommit => self.options.word_unit_commit = value,
         }
     }
 
@@ -84,6 +85,7 @@ impl InputContext {
             InputOption::NonChoseongCombi => self.options.non_initial_combi,
             InputOption::OldJamo => self.options.old_jamo_mode,
             InputOption::NobleName => self.options.noble_name,
+            InputOption::WordUnitCommit => self.options.word_unit_commit,
         }
     }
 
@@ -402,17 +404,16 @@ impl InputContext {
     fn commit_syllable(&mut self) {
         let mut syl = String::new();
         self.state.commit(&mut syl);
-        if syl.is_empty() {
-            return;
-        }
+        if syl.is_empty() { return; }
 
-        if !self.options.noble_name {
+        if !self.options.noble_name && !self.options.word_unit_commit {
             self.commit_string.push_str(&syl);
             self.history.clear();
             return;
         }
 
         self.noble_history.push_str(&syl);
+        if self.options.word_unit_commit { return; }
 
         let mut replaced = false;
         if self.noble_history.ends_with("김일성") {
@@ -456,6 +457,7 @@ pub enum InputOption {
     NonChoseongCombi,
     OldJamo,
     NobleName,
+    WordUnitCommit,
 }
 
 #[derive(Debug)]

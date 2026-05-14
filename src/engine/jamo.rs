@@ -12,6 +12,7 @@ pub struct InputOptions {
     pub treat_final_as_initial: bool,
     pub old_jamo_mode: bool,
     pub noble_name: bool,
+    pub word_unit_commit: bool,
 }
 
 impl Default for InputOptions {
@@ -24,6 +25,7 @@ impl Default for InputOptions {
             treat_final_as_initial: true,
             old_jamo_mode: false,
             noble_name: false,
+            word_unit_commit: false,
         }
     }
 }
