@@ -97,11 +97,7 @@ impl CharacterState {
         if self.history.is_empty() {
             return false;
         }
-        let last = self.history.pop().unwrap();
-
-        if let Some(decomposed) = Self::decompose_kv(last) {
-            self.history.push(decomposed);
-        }
+        self.history.pop();
 
         let old_history = std::mem::take(&mut self.history);
         self.reset();
@@ -111,51 +107,6 @@ impl CharacterState {
         true
     }
 
-    fn decompose_kv(kv: KeyValue) -> Option<KeyValue> {
-        match kv {
-            KeyValue::Medial { medial_sound, compose } => medial_sound
-                .backspace()
-                .map(|j| KeyValue::Medial { medial_sound: j, compose }),
-            KeyValue::Final { final_sound } => {
-                final_sound.backspace().map(|j| KeyValue::Final { final_sound: j })
-            }
-            KeyValue::Both { initial_sound: _, final_sound } => {
-                if final_sound == Final::ToenSiut {
-                    Some(KeyValue::Both {
-                        initial_sound: Initial::Siut,
-                        final_sound: Final::Siut,
-                    })
-                } else if final_sound == Final::ToenKiuk {
-                    Some(KeyValue::Both {
-                        initial_sound: Initial::Kiuk,
-                        final_sound: Final::Kiuk,
-                    })
-                } else {
-                    None
-                }
-            }
-            KeyValue::ChoJong { initial_sound, final_sound, first } => {
-                if first {
-                    final_sound.backspace()
-                        .map(|j| KeyValue::ChoJong {
-                            initial_sound,
-                            final_sound: j,
-                            first: true,
-                        })
-                        .or(Some(KeyValue::Initial { initial_sound }))
-                } else {
-                    initial_sound.backspace()
-                        .map(|c| KeyValue::ChoJong {
-                            initial_sound: c,
-                            final_sound,
-                            first: false,
-                        })
-                        .or(Some(KeyValue::Final { final_sound }))
-                }
-            }
-            _ => None,
-        }
-    }
 
     fn apply_kv(&mut self, kv: KeyValue, opts: InputOptions) -> CharacterResult {
         match kv {

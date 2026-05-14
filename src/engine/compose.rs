@@ -178,20 +178,8 @@ impl Initial {
                 return result;
             }
         }
-
         match (self, other) {
             (Self::Chiut, Self::Hiut) => Some(Self::Chiut),
-            _ => None,
-        }
-    }
-
-    pub const fn backspace(self) -> Option<Self> {
-        match self {
-            Self::ToenKiuk => Some(Self::Kiuk),
-            Self::ToenPiup => Some(Self::Piup),
-            Self::ToenSiut => Some(Self::Siut),
-            Self::ToenJiut => Some(Self::Jiut),
-            Self::ToenTiut => Some(Self::Tiut),
             _ => None,
         }
     }
@@ -307,20 +295,7 @@ impl Medial {
             _ => None,
         }
     }
-
-    pub const fn backspace(self) -> Option<Self> {
-        match self {
-            Self::Ae => Some(Self::A),
-            Self::Yae => Some(Self::Ya),
-            Self::Ye => Some(Self::Yeo),
-            Self::Wa | Self::Oe | Self::Wae => Some(Self::O),
-            Self::Weo | Self::Wi | Self::We => Some(Self::U),
-            Self::Yi => Some(Self::Eu),
-            _ => None,
-        }
-    }
 }
-
 impl Final {
     pub const fn is_old(self) -> bool {
         self as u32 > 26
@@ -495,21 +470,6 @@ impl Final {
                     _ => None,
                 }
             }
-            _ => None,
-        }
-    }
-
-    pub const fn backspace(self) -> Option<Self> {
-        match self {
-            Self::ToenKiuk | Self::KiukSiut => Some(Self::Kiuk),
-            Self::ToenSiut => Some(Self::Siut),
-            Self::NiunHiut | Self::NiunJiut => Some(Self::Niun),
-            Self::RiulMium
-            | Self::RiulPiup
-            | Self::RiulSiut
-            | Self::RiulThiut
-            | Self::RiulHiut => Some(Self::Riul),
-            Self::PiupSiut => Some(Self::Piup),
             _ => None,
         }
     }

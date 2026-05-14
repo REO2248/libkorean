@@ -54,9 +54,9 @@ fn test_korean_ic_process_2() {
     ic.process('j');
     ic.process('G');
     ic.backspace();
-    assert_eq!(ic.preedit_string(), "갓");
-    ic.backspace();
     assert_eq!(ic.preedit_string(), "가");
+    ic.backspace();
+    assert_eq!(ic.preedit_string(), "ㄱ");
 
     let mut ic = create_ic("kps9256");
     ic.process('s');

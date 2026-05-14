@@ -103,7 +103,7 @@ fn test_noble_name_backspace() {
     ic.backspace();
     assert_eq!(ic.preedit_string(), "김");
 
-    // Backspace again restores '김' from noble_history to preedit
+    // Backspace again pops 'w' (ㅁ) from '김', leaving 'ㄱ+ㅣ'
     ic.backspace();
-    assert_eq!(ic.preedit_string(), "김");
+    assert_eq!(ic.preedit_string(), "기");
 }

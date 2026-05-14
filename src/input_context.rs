@@ -25,6 +25,7 @@ pub struct InputContext {
     commit_string: String,
     input_buffer: String,
     noble_history: String,
+    history: Vec<KeyValue>,
 }
 
 impl InputContext {
@@ -57,6 +58,7 @@ impl InputContext {
             commit_string: String::new(),
             input_buffer: String::new(),
             noble_history: String::new(),
+            history: Vec::new(),
         })
     }
 
@@ -150,21 +152,38 @@ impl InputContext {
         true
     }
 
-    fn process_kv(&mut self, mut kv: KeyValue) {
-        if self.is_transliteration() {
-            kv = self.apply_transliteration_rules(kv);
-        }
+    fn process_kv(&mut self, kv: KeyValue) {
+        self.history.push(kv);
+        self.rebuild();
+    }
 
-        if let KeyValue::Pass(ch) = kv {
-            self.flush_to_commit();
-            if ch != Self::SYLLABLE_BREAK_MARKER {
-                self.commit_string.push(ch);
+    fn rebuild(&mut self) {
+        let keys = std::mem::take(&mut self.history);
+        self.state.reset();
+        self.noble_history.clear();
+        for mut kv in keys {
+            if self.is_transliteration() { kv = self.apply_transliteration_rules(kv); }
+            if let KeyValue::Pass(ch) = kv {
+                self.flush_to_commit();
+                if ch != Self::SYLLABLE_BREAK_MARKER { self.commit_string.push(ch); }
+                continue;
             }
-            return;
+            match self.state.key(kv, self.options) {
+                CharacterResult::Consume => self.history.push(kv),
+                CharacterResult::NewCharacter(mut next) => {
+                    if self.is_transliteration() && !next.has_initial() && next.has_medial() {
+                        let mut final_next = CharacterState::new();
+                        final_next.key(KeyValue::Initial { initial_sound: crate::engine::Initial::Iung }, self.options);
+                        for k in next.history() { final_next.key(*k, self.options); }
+                        next = final_next;
+                    }
+                    self.commit_syllable();
+                    self.state = next;
+                    if self.history.is_empty() { self.history.extend(self.state.history()); }
+                    else { self.history.push(kv); }
+                }
+            }
         }
-
-        let ret = self.state.key(kv, self.options);
-        self.handle_result(ret);
     }
 
     fn apply_transliteration_rules(&mut self, mut kv: KeyValue) -> KeyValue {
@@ -214,33 +233,14 @@ impl InputContext {
             return InputEvent::Preedit(self.preedit_string());
         }
 
-        let old_state_empty = self.is_empty();
-        if self.state.backspace(self.options) || (!old_state_empty && self.is_empty()) {
-            InputEvent::Preedit(self.preedit_string())
-        } else if !self.noble_history.is_empty() {
-            if let Some(last_syl) = self.noble_history.pop() {
-                if let Some((cho_c, jung_c, jong_c)) = crate::char_utils::syllable_to_initial_sound(last_syl) {
-                    use std::convert::TryFrom;
-                    use crate::engine::{Initial, Medial, Final};
-                    if let (Ok(cho), Ok(jung)) = (Initial::try_from(cho_c), Medial::try_from(jung_c)) {
-                        self.state.key(KeyValue::Initial { initial_sound: cho }, self.options);
-                        self.state.key(KeyValue::Medial { medial_sound: jung, compose: true }, self.options);
-                        if let Some(j_c) = jong_c {
-                            if let Ok(jo) = Final::try_from(j_c) {
-                                self.state.key(KeyValue::Final { final_sound: jo }, self.options);
-                            }
-                        }
-                    }
-                    InputEvent::Preedit(self.preedit_string())
-                } else {
-                    InputEvent::Preedit(self.preedit_string())
-                }
-            } else {
-                InputEvent::None
-            }
-        } else {
-            InputEvent::None
+        if self.history.is_empty() {
+            return InputEvent::None;
         }
+
+        self.history.pop();
+        self.rebuild();
+
+        InputEvent::Preedit(self.preedit_string())
     }
 
     pub fn flush(&mut self) -> String {
@@ -257,6 +257,7 @@ impl InputContext {
         self.input_buffer.clear();
         self.commit_string.clear();
         self.noble_history.clear();
+        self.history.clear();
     }
 
     pub const fn is_empty(&self) -> bool {
@@ -383,31 +384,6 @@ impl InputContext {
         self.commit_string.clear();
     }
 
-    fn handle_result(&mut self, ret: CharacterResult) {
-        match ret {
-            CharacterResult::Consume => {}
-            CharacterResult::NewCharacter(mut new_state) => {
-                if self.is_transliteration()
-                    && !new_state.has_initial()
-                    && new_state.has_medial()
-                {
-                    let mut final_new_state = CharacterState::new();
-                    final_new_state.key(
-                        KeyValue::Initial {
-                            initial_sound: crate::engine::Initial::Iung,
-                        },
-                        self.options,
-                    );
-                    for kv in new_state.history() {
-                        final_new_state.key(*kv, self.options);
-                    }
-                    new_state = final_new_state;
-                }
-                self.commit_syllable();
-                self.state = new_state;
-            }
-        }
-    }
 
     fn flush_to_commit(&mut self) {
         match self.output_mode {
@@ -432,6 +408,7 @@ impl InputContext {
 
         if !self.options.noble_name {
             self.commit_string.push_str(&syl);
+            self.history.clear();
             return;
         }
 
@@ -468,6 +445,7 @@ impl InputContext {
     fn flush_noble_name(&mut self) {
         self.commit_string.push_str(&self.noble_history);
         self.noble_history.clear();
+        self.history.clear();
     }
 }
 
