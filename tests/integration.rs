@@ -587,3 +587,38 @@ fn test_preedit_noble_name_preservation() {
     assert_eq!(preedit, "반바");
 }
 
+#[test]
+fn test_thorough_reset() {
+    let mut ic = 입력문맥::new("romaja").unwrap();
+    ic.항목설정(입력항목::단어단위확정, true);
+    
+    ic.처리('b');
+    ic.처리('a');
+    ic.처리('n');
+    assert_eq!(ic.편집문자렬(), "반");
+    
+    ic.초기화();
+    assert_eq!(ic.편집문자렬(), "");
+    assert!(ic.is_empty());
+}
+
+#[test]
+fn test_partial_reset() {
+    let mut ic = 입력문맥::new("romaja").unwrap();
+    ic.항목설정(입력항목::단어단위확정, true);
+    
+    // Type 'joseonrodongdang'
+    for c in "joseonrodongdang".chars() {
+        ic.처리(c);
+    }
+    assert_eq!(ic.편집문자렬(), "조선로동당");
+    
+    // Remove prefix '조선'
+    ic.접두사삭제("조선");
+    assert_eq!(ic.편집문자렬(), "로동당");
+    
+    // Remove prefix '로동'
+    ic.접두사삭제("로동");
+    assert_eq!(ic.편집문자렬(), "당");
+}
+

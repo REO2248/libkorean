@@ -277,6 +277,39 @@ impl 입력문맥 {
         self.입력완충.clear();
         self.결속문자렬.clear();
         self.기록.clear();
+        self.존함기록.clear();
+    }
+
+    pub fn 접두사삭제(&mut self, prefix: &str) {
+        if prefix.is_empty() {
+            return;
+        }
+
+        let keys = std::mem::take(&mut self.기록);
+        let mut matched_index = None;
+
+        for i in 1..=keys.len() {
+            let sub_keys = &keys[..i];
+
+            let mut temp_ctx = Self::new(&self.배렬식별자).unwrap();
+            temp_ctx.설정 = self.설정;
+            temp_ctx.출력방식 = self.출력방식;
+            for &kv in sub_keys {
+                temp_ctx.건값처리(kv);
+            }
+
+            if temp_ctx.편집문자렬() == prefix {
+                matched_index = Some(i);
+                break;
+            }
+        }
+
+        if let Some(idx) = matched_index {
+            self.기록 = keys[idx..].to_vec();
+        } else {
+            self.기록 = keys;
+        }
+        self.다시만들기();
     }
 
     pub const fn is_empty(&self) -> bool {

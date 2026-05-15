@@ -207,6 +207,7 @@ pub unsafe extern "C" fn korean_ic_process(hic: *mut KoreanInputContext, ascii: 
         return false;
     };
     ctx.문맥.결속문자렬_비우기();
+    LAST_HANJA_KEY_VALID.with(|v| *v.borrow_mut() = false);
     if !(0..=0x7f).contains(&ascii) {
         return false;
     }
@@ -220,6 +221,7 @@ pub unsafe extern "C" fn korean_ic_backspace(hic: *mut KoreanInputContext) -> bo
     let Some(ctx) = 문맥획득(hic) else {
         return false;
     };
+    LAST_HANJA_KEY_VALID.with(|v| *v.borrow_mut() = false);
     !matches!(ctx.문맥.지우기(), 입력사건::없음)
 }
 ///
@@ -234,6 +236,13 @@ pub unsafe extern "C" fn korean_ic_flush(hic: *mut KoreanInputContext) -> *const
     ctx.ffi.비우기 = CString::new(result).unwrap_or_default();
     ctx.ffi.비우기.as_ptr()
 }
+use std::cell::RefCell;
+
+thread_local! {
+    static LAST_HANJA_KEY: RefCell<String> = RefCell::new(String::new());
+    static LAST_HANJA_KEY_VALID: RefCell<bool> = RefCell::new(false);
+}
+
 ///
 /// `hic` must be null or a valid pointer returned by `korean_ic_new`.
 #[no_mangle]
@@ -241,7 +250,34 @@ pub unsafe extern "C" fn korean_ic_reset(hic: *mut KoreanInputContext) {
     let Some(ctx) = 문맥획득(hic) else {
         return;
     };
-    ctx.문맥.초기화();
+    let prefix = LAST_HANJA_KEY.with(|lk| lk.borrow().clone());
+    let valid = LAST_HANJA_KEY_VALID.with(|v| *v.borrow());
+    
+    if valid && !prefix.is_empty() && ctx.문맥.편집문자렬().starts_with(&prefix) {
+        ctx.문맥.접두사삭제(&prefix);
+    } else {
+        ctx.문맥.초기화();
+    }
+    
+    LAST_HANJA_KEY_VALID.with(|v| *v.borrow_mut() = false);
+}
+///
+/// `hic` must be null or a valid pointer returned by `korean_ic_new`.
+/// `prefix` must be a valid null-terminated C string.
+#[no_mangle]
+pub unsafe extern "C" fn korean_ic_remove_preedit_prefix(
+    hic: *mut KoreanInputContext,
+    prefix: *const c_char,
+) {
+    let Some(ctx) = 문맥획득(hic) else {
+        return;
+    };
+    if prefix.is_null() {
+        return;
+    }
+    let c_str = unsafe { CStr::from_ptr(prefix) };
+    let prefix_str = c_str.to_str().unwrap_or("");
+    ctx.문맥.접두사삭제(prefix_str);
 }
 ///
 /// `hic` must be null or a valid pointer returned by `korean_ic_new`.
@@ -576,7 +612,11 @@ pub unsafe extern "C" fn hanja_list_get_nth_key(
     managed
         .entries
         .get(n as usize)
-        .map_or(std::ptr::null(), |e| e.열쇠.as_ptr())
+        .map_or(std::ptr::null(), |e| {
+            LAST_HANJA_KEY.with(|lk| *lk.borrow_mut() = e.열쇠.to_string_lossy().to_string());
+            LAST_HANJA_KEY_VALID.with(|v| *v.borrow_mut() = true);
+            e.열쇠.as_ptr()
+        })
 }
 ///
 /// `list` must be null or a pointer returned by hanja_table_match_*.

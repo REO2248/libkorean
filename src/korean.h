@@ -50,6 +50,8 @@ void korean_ic_delete(KoreanInputContext *hic);
 bool korean_ic_process(KoreanInputContext *hic, int ascii);
 bool korean_ic_backspace(KoreanInputContext *hic);
 void korean_ic_reset(KoreanInputContext *hic);
+void korean_ic_remove_preedit_prefix(KoreanInputContext *hic,
+                                     const char *prefix);
 const char *korean_ic_flush(KoreanInputContext *hic);
 const char *korean_ic_get_preedit_string(KoreanInputContext *hic);
 const char *korean_ic_get_commit_string(KoreanInputContext *hic);
