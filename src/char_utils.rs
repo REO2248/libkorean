@@ -22,12 +22,12 @@ pub const fn 소리마디인가(c: char) -> bool {
 }
 
 #[must_use]
-pub const fn is_cjamo(c: char) -> bool {
+pub const fn 호환자모인가(c: char) -> bool {
     (c as u32) >= 0x3131 && (c as u32) <= 0x318E
 }
 
 #[must_use]
-pub const fn compat_to_conjoining(c: char) -> char {
+pub const fn 호환자모를_결합자모로(c: char) -> char {
     match c as u32 {
         0x3131 => '\u{1100}',
         0x3132 => '\u{1101}',
@@ -222,7 +222,7 @@ pub fn 첫소리_소리마디로_변환(
         None
     };
 
-    Some(c.compose(v, t))
+    Some(c.조합(v, t))
 }
 
 #[must_use]

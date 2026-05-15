@@ -1,109 +1,109 @@
-use korean::input_context::{InputContext, InputOption};
+use korean::input_context::{입력문맥, 입력항목};
 
 #[test]
 fn test_noble_name_replacement() {
-    let mut ic = InputContext::new("kps9256").expect("valid layout");
-    ic.set_option(InputOption::존함, true);
+    let mut 문맥 = 입력문맥::new("kps9256").expect("valid layout");
+    문맥.항목설정(입력항목::존함, true);
 
     // Test 김일성 -> U+F113 U+F114 U+F115
     // 김 (s k w) -> ㄱ+ㅣ+ㅁ
-    ic.process('s');
-    ic.process('k');
-    ic.process('w');
-    assert_eq!(ic.preedit_string(), "김");
+    문맥.처리('s');
+    문맥.처리('k');
+    문맥.처리('w');
+    assert_eq!(문맥.편집문자렬(), "김");
 
     // 일 (d k r) -> ㅇ+ㅣ+ㄹ
-    ic.process('d'); // 김 is committed (delayed in noble_history)
-    assert_eq!(ic.get_commit_string(), "");
-    ic.process('k');
-    ic.process('r');
-    assert_eq!(ic.preedit_string(), "김일");
+    문맥.처리('d'); // 김 is committed (delayed in 존함기록)
+    assert_eq!(문맥.결속문자렬(), "");
+    문맥.처리('k');
+    문맥.처리('r');
+    assert_eq!(문맥.편집문자렬(), "김일");
 
     // 성 (g i d) -> ㅅ+ㅓ+ㅇ
-    ic.process('g'); // 일 is committed (delayed in noble_history)
-    assert_eq!(ic.get_commit_string(), "");
-    ic.process('i');
-    ic.process('d');
-    assert_eq!(ic.preedit_string(), "\u{F113}\u{F114}\u{F115}");
+    문맥.처리('g'); // 일 is committed (delayed in 존함기록)
+    assert_eq!(문맥.결속문자렬(), "");
+    문맥.처리('i');
+    문맥.처리('d');
+    assert_eq!(문맥.편집문자렬(), "\u{F113}\u{F114}\u{F115}");
 
     // Finalize 성 (by typing space)
-    ic.process(' ');
-    assert_eq!(ic.get_commit_string(), "\u{F113}\u{F114}\u{F115} ");
+    문맥.처리(' ');
+    assert_eq!(문맥.결속문자렬(), "\u{F113}\u{F114}\u{F115} ");
 }
 
 #[test]
 fn test_noble_name_replacement_split() {
-    let mut ic = InputContext::new("kps9256").expect("valid layout");
-    ic.set_option(InputOption::존함, true);
+    let mut 문맥 = 입력문맥::new("kps9256").expect("valid layout");
+    문맥.항목설정(입력항목::존함, true);
 
     // 김정일 -> U+F116 U+F117 U+F118
     // s k w (김) -> ㄱ+ㅣ+ㅁ
-    for c in "skw".chars() { ic.process(c); }
+    for c in "skw".chars() { 문맥.처리(c); }
     // a i d (정) -> ㅈ+ㅓ+ㅇ
-    for c in "aid".chars() { ic.process(c); }
+    for c in "aid".chars() { 문맥.처리(c); }
     // d k r (일) -> ㅇ+ㅣ+ㄹ
-    for c in "dkr".chars() { ic.process(c); }
+    for c in "dkr".chars() { 문맥.처리(c); }
 
-    assert_eq!(ic.preedit_string(), "\u{F116}\u{F117}\u{F118}");
-    ic.process(' ');
-    assert_eq!(ic.get_commit_string(), "\u{F116}\u{F117}\u{F118} ");
+    assert_eq!(문맥.편집문자렬(), "\u{F116}\u{F117}\u{F118}");
+    문맥.처리(' ');
+    assert_eq!(문맥.결속문자렬(), "\u{F116}\u{F117}\u{F118} ");
 }
 
 #[test]
 fn test_noble_name_replacement_split_3() {
-    let mut ic = InputContext::new("kps9256").expect("valid layout");
-    ic.set_option(InputOption::존함, true);
+    let mut 문맥 = 입력문맥::new("kps9256").expect("valid layout");
+    문맥.항목설정(입력항목::존함, true);
 
     // 김정은 -> U+F120 U+F121 U+F122
     // s k w (김) -> ㄱ+ㅣ+ㅁ
-    for c in "skw".chars() { ic.process(c); }
+    for c in "skw".chars() { 문맥.처리(c); }
     // a i d (정) -> ㅈ+ㅓ+ㅇ
-    for c in "aid".chars() { ic.process(c); }
+    for c in "aid".chars() { 문맥.처리(c); }
     // d l f (은) -> ㅇ+ㅡ+ㄴ
-    for c in "dlf".chars() { ic.process(c); }
+    for c in "dlf".chars() { 문맥.처리(c); }
 
-    assert_eq!(ic.preedit_string(), "\u{F120}\u{F121}\u{F122}");
-    ic.process(' ');
-    assert_eq!(ic.get_commit_string(), "\u{F120}\u{F121}\u{F122} ");
+    assert_eq!(문맥.편집문자렬(), "\u{F120}\u{F121}\u{F122}");
+    문맥.처리(' ');
+    assert_eq!(문맥.결속문자렬(), "\u{F120}\u{F121}\u{F122} ");
 }
 
 #[test]
 fn test_noble_name_non_matching() {
-    let mut ic = InputContext::new("kps9256").expect("valid layout");
-    ic.set_option(InputOption::존함, true);
+    let mut 문맥 = 입력문맥::new("kps9256").expect("valid layout");
+    문맥.항목설정(입력항목::존함, true);
 
     // 김밥 (s k w q j q)
-    for c in "skw".chars() { ic.process(c); }
-    ic.process('q'); // 김 is moved to noble_history, 'ㅂ' starts in preedit
-    assert_eq!(ic.get_commit_string(), "");
-    assert_eq!(ic.preedit_string(), "김ㅂ");
-    ic.process('j'); // ㅂ + ㅏ -> 바
-    assert_eq!(ic.preedit_string(), "김바");
-    ic.process('q'); // 김바 + ㅂ -> 김밥
-    assert_eq!(ic.preedit_string(), "김밥");
+    for c in "skw".chars() { 문맥.처리(c); }
+    문맥.처리('q'); // 김 is moved to 존함기록, 'ㅂ' starts in preedit
+    assert_eq!(문맥.결속문자렬(), "");
+    assert_eq!(문맥.편집문자렬(), "김ㅂ");
+    문맥.처리('j'); // ㅂ + ㅏ -> 바
+    assert_eq!(문맥.편집문자렬(), "김바");
+    문맥.처리('q'); // 김바 + ㅂ -> 김밥
+    assert_eq!(문맥.편집문자렬(), "김밥");
 
-    // Typing space will flush 김밥
-    ic.process(' ');
-    assert_eq!(ic.get_commit_string(), "김밥 ");
+    // Typing space will 비우기 김밥
+    문맥.처리(' ');
+    assert_eq!(문맥.결속문자렬(), "김밥 ");
 }
 
 #[test]
 fn test_noble_name_backspace() {
-    let mut ic = InputContext::new("kps9256").expect("valid layout");
-    ic.set_option(InputOption::존함, true);
+    let mut 문맥 = 입력문맥::new("kps9256").expect("valid layout");
+    문맥.항목설정(입력항목::존함, true);
 
     // 김 (s k w)
-    for c in "skw".chars() { ic.process(c); }
-    // Typing 'd' (ㅇ) starts next syllable, 김 moves to noble_history
-    ic.process('d');
-    assert_eq!(ic.get_commit_string(), "");
-    assert_eq!(ic.preedit_string(), "김ㅇ");
+    for c in "skw".chars() { 문맥.처리(c); }
+    // Typing 'd' (ㅇ) starts next syllable, 김 moves to 존함기록
+    문맥.처리('d');
+    assert_eq!(문맥.결속문자렬(), "");
+    assert_eq!(문맥.편집문자렬(), "김ㅇ");
 
     // Backspace pops 'ㅇ'
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "김");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "김");
 
     // Backspace again pops 'w' (ㅁ) from '김', leaving 'ㄱ+ㅣ'
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "기");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "기");
 }

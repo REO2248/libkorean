@@ -25,7 +25,7 @@ fn main() {
                     dict_path = Some(PathBuf::from(&args[i]));
                 }
             }
-            "-k" | "--key" => {
+            "-k" | "--열쇠" => {
                 i += 1;
                 if i < args.len() {
                     search_key = Some(args[i].clone());
@@ -59,38 +59,38 @@ fn main() {
         process::exit(1);
     }
 
-    let dict = match 한자사전::load(&dict_path) {
-        Ok(dict) => dict,
+    let 사전 = match 한자사전::적재(&dict_path) {
+        Ok(사전) => 사전,
         Err(e) => {
             eprintln!("Error loading dictionary: {e}");
             process::exit(1);
         }
     };
 
-    if let Some(key) = search_key {
-        search_and_print(&dict, &key);
+    if let Some(열쇠) = search_key {
+        search_and_print(&사전, &열쇠);
     } else {
         let stdin = io::stdin();
         for line in stdin.lock().lines() {
-            let key = match line {
+            let 열쇠 = match line {
                 Ok(line) => line,
                 Err(_) => break,
             };
-            let key = key.trim().to_string();
-            if key.is_empty() {
+            let 열쇠 = 열쇠.trim().to_string();
+            if 열쇠.is_empty() {
                 continue;
             }
-            search_and_print(&dict, &key);
+            search_and_print(&사전, &열쇠);
         }
     }
 }
 
-fn search_and_print(dict: &한자사전, key: &str) {
-    let results = dict.match_prefix(key);
+fn search_and_print(사전: &한자사전, 열쇠: &str) {
+    let 결과 = 사전.앞부분일치(열쇠);
 
-    for entry in &results {
-        let comment = entry.comment.as_deref().unwrap_or("");
-        println!("{}:{}:{}", entry.key, entry.value, comment);
+    for 항목 in &결과 {
+        let 설명 = 항목.설명.as_deref().unwrap_or("");
+        println!("{}:{}:{}", 항목.열쇠, 항목.값, 설명);
     }
 }
 
@@ -102,7 +102,7 @@ Search 한자 dictionary.
 
 Options:
   -f, --file=FILE       Dictionary file (default: data/hanja/hanja.txt)
-  -k, --key=KEY         Search key (if not provided, reads from stdin)
+  -k, --열쇠=KEY         Search 열쇠 (if not provided, reads from stdin)
   -h, --help            Display this help
   -v, --version         Output version information
 

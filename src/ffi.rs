@@ -6,8 +6,8 @@ use std::os::raw::{c_char, c_int, c_uint};
 use std::ptr::NonNull;
 
 use crate::char_utils;
-use crate::input_context::{InputContext, InputEvent, InputOption};
-use crate::keyboard::KeyboardRegistry;
+use crate::input_context::{입력문맥, 입력사건, 입력항목};
+use crate::keyboard::건반등록기;
 
 #[allow(non_camel_case_types)]
 pub type ucschar = u32;
@@ -31,15 +31,15 @@ pub struct KoreanInputContext {
 }
 
 #[derive(Default)]
-struct FfiState {
-    preedit: CString,
-    commit: CString,
-    flush: CString,
+struct Ffi {
+    편집: CString,
+    결속: CString,
+    비우기: CString,
 }
 
-struct ManagedContext {
-    ic: InputContext,
-    ffi: FfiState,
+struct 관리문맥 {
+    문맥: 입력문맥,
+    ffi: Ffi,
 }
 
 #[no_mangle]
@@ -89,7 +89,7 @@ pub extern "C" fn korean_is_initial_sound(c: ucschar) -> bool {
 
 #[no_mangle]
 pub extern "C" fn korean_is_cjamo(c: ucschar) -> bool {
-    char::from_u32(c).is_some_and(char_utils::is_cjamo)
+    char::from_u32(c).is_some_and(char_utils::호환자모인가)
 }
 
 #[no_mangle]
@@ -151,19 +151,19 @@ pub unsafe extern "C" fn korean_syllable_to_initial_sound(
 }
 #[no_mangle]
 pub extern "C" fn korean_keyboard_list_get_count() -> c_uint {
-    KeyboardRegistry::list().count() as c_uint
+    건반등록기::목록().count() as c_uint
 }
 
 #[no_mangle]
 pub extern "C" fn korean_keyboard_list_get_keyboard_id(index: c_uint) -> *const c_char {
-    KeyboardRegistry::list()
+    건반등록기::목록()
         .nth(index as usize)
         .map_or(std::ptr::null(), |kb| kb.id_cstr.as_ptr())
 }
 
 #[no_mangle]
 pub extern "C" fn korean_keyboard_list_get_keyboard_name(index: c_uint) -> *const c_char {
-    KeyboardRegistry::list()
+    건반등록기::목록()
         .nth(index as usize)
         .map_or(std::ptr::null(), |kb| kb.name_cstr.as_ptr())
 }
@@ -178,10 +178,10 @@ pub unsafe extern "C" fn korean_ic_new(keyboard: *const c_char) -> *mut KoreanIn
         let c_str = unsafe { CStr::from_ptr(keyboard) };
         c_str.to_str().unwrap_or("2")
     };
-    InputContext::new(id).map_or(std::ptr::null_mut(), |ic| {
-        Box::into_raw(Box::new(ManagedContext {
-            ic,
-            ffi: FfiState::default(),
+    입력문맥::new(id).map_or(std::ptr::null_mut(), |문맥| {
+        Box::into_raw(Box::new(관리문맥 {
+            문맥,
+            ffi: Ffi::default(),
         }))
         .cast::<KoreanInputContext>()
     })
@@ -192,56 +192,56 @@ pub unsafe extern "C" fn korean_ic_new(keyboard: *const c_char) -> *mut KoreanIn
 #[no_mangle]
 pub unsafe extern "C" fn korean_ic_delete(hic: *mut KoreanInputContext) {
     if !hic.is_null() {
-        drop(Box::from_raw(hic.cast::<ManagedContext>()));
+        drop(Box::from_raw(hic.cast::<관리문맥>()));
     }
 }
-fn get_ctx(hic: *mut KoreanInputContext) -> Option<&'static mut ManagedContext> {
-    NonNull::new(hic).map(|ptr| unsafe { ptr.cast::<ManagedContext>().as_mut() })
+fn 문맥획득(hic: *mut KoreanInputContext) -> Option<&'static mut 관리문맥> {
+    NonNull::new(hic).map(|ptr| unsafe { ptr.cast::<관리문맥>().as_mut() })
 }
 
 ///
 /// `hic` must be null or a valid pointer returned by `korean_ic_new`.
 #[no_mangle]
 pub unsafe extern "C" fn korean_ic_process(hic: *mut KoreanInputContext, ascii: c_int) -> bool {
-    let Some(ctx) = get_ctx(hic) else {
+    let Some(ctx) = 문맥획득(hic) else {
         return false;
     };
-    ctx.ic.clear_commit_string();
+    ctx.문맥.결속문자렬_비우기();
     if !(0..=0x7f).contains(&ascii) {
         return false;
     }
-    let key = ascii as u8 as char;
-    ctx.ic.process(key)
+    let 열쇠 = ascii as u8 as char;
+    ctx.문맥.처리(열쇠)
 }
 ///
 /// `hic` must be null or a valid pointer returned by `korean_ic_new`.
 #[no_mangle]
 pub unsafe extern "C" fn korean_ic_backspace(hic: *mut KoreanInputContext) -> bool {
-    let Some(ctx) = get_ctx(hic) else {
+    let Some(ctx) = 문맥획득(hic) else {
         return false;
     };
-    !matches!(ctx.ic.backspace(), InputEvent::None)
+    !matches!(ctx.문맥.지우기(), 입력사건::없음)
 }
 ///
 /// `hic` must be null or a valid pointer returned by `korean_ic_new`.
 /// The returned pointer is valid until the next call on this context or deletion.
 #[no_mangle]
 pub unsafe extern "C" fn korean_ic_flush(hic: *mut KoreanInputContext) -> *const c_char {
-    let Some(ctx) = get_ctx(hic) else {
+    let Some(ctx) = 문맥획득(hic) else {
         return std::ptr::null();
     };
-    let result = ctx.ic.flush();
-    ctx.ffi.flush = CString::new(result).unwrap_or_default();
-    ctx.ffi.flush.as_ptr()
+    let result = ctx.문맥.비우기();
+    ctx.ffi.비우기 = CString::new(result).unwrap_or_default();
+    ctx.ffi.비우기.as_ptr()
 }
 ///
 /// `hic` must be null or a valid pointer returned by `korean_ic_new`.
 #[no_mangle]
 pub unsafe extern "C" fn korean_ic_reset(hic: *mut KoreanInputContext) {
-    let Some(ctx) = get_ctx(hic) else {
+    let Some(ctx) = 문맥획득(hic) else {
         return;
     };
-    ctx.ic.reset();
+    ctx.문맥.초기화();
 }
 ///
 /// `hic` must be null or a valid pointer returned by `korean_ic_new`.
@@ -250,12 +250,12 @@ pub unsafe extern "C" fn korean_ic_reset(hic: *mut KoreanInputContext) {
 pub unsafe extern "C" fn korean_ic_get_preedit_string(
     hic: *mut KoreanInputContext,
 ) -> *const c_char {
-    let Some(ctx) = get_ctx(hic) else {
+    let Some(ctx) = 문맥획득(hic) else {
         return std::ptr::null();
     };
-    let result = ctx.ic.preedit_string();
-    ctx.ffi.preedit = CString::new(result).unwrap_or_default();
-    ctx.ffi.preedit.as_ptr()
+    let result = ctx.문맥.편집문자렬();
+    ctx.ffi.편집 = CString::new(result).unwrap_or_default();
+    ctx.ffi.편집.as_ptr()
 }
 ///
 /// `hic` must be null or a valid pointer returned by `korean_ic_new`.
@@ -264,12 +264,12 @@ pub unsafe extern "C" fn korean_ic_get_preedit_string(
 pub unsafe extern "C" fn korean_ic_get_commit_string(
     hic: *mut KoreanInputContext,
 ) -> *const c_char {
-    let Some(ctx) = get_ctx(hic) else {
+    let Some(ctx) = 문맥획득(hic) else {
         return std::ptr::null();
     };
-    let result = ctx.ic.get_commit_string();
-    ctx.ffi.commit = CString::new(result).unwrap_or_default();
-    ctx.ffi.commit.as_ptr()
+    let result = ctx.문맥.결속문자렬();
+    ctx.ffi.결속 = CString::new(result).unwrap_or_default();
+    ctx.ffi.결속.as_ptr()
 }
 ///
 /// `hic` must be null or a valid pointer returned by `korean_ic_new`.
@@ -277,39 +277,39 @@ pub unsafe extern "C" fn korean_ic_get_commit_string(
 pub unsafe extern "C" fn korean_ic_set_option(
     hic: *mut KoreanInputContext,
     option: c_int,
-    value: bool,
+    값: bool,
 ) {
-    let Some(ctx) = get_ctx(hic) else {
+    let Some(ctx) = 문맥획득(hic) else {
         return;
     };
     let opt = match option {
-        0 => InputOption::AutoReorder,
-        1 => InputOption::CombiOnDoubleStroke,
-        2 => InputOption::NonChoseongCombi,
-        3 => InputOption::OldJamo,
-        4 => InputOption::존함,
-        5 => InputOption::WordUnitCommit,
+        0 => 입력항목::자동재배치,
+        1 => 입력항목::두번타건조합,
+        2 => 입력항목::첫소리밖조합,
+        3 => 입력항목::옛글자방식,
+        4 => 입력항목::존함,
+        5 => 입력항목::단어단위확적,
         _ => return,
     };
-    ctx.ic.set_option(opt, value);
+    ctx.문맥.항목설정(opt, 값);
 }
 ///
 /// `hic` must be null or a valid pointer returned by `korean_ic_new`.
 #[no_mangle]
 pub unsafe extern "C" fn korean_ic_get_option(hic: *mut KoreanInputContext, option: c_int) -> bool {
-    let Some(ctx) = get_ctx(hic) else {
+    let Some(ctx) = 문맥획득(hic) else {
         return false;
     };
     let opt = match option {
-        0 => InputOption::AutoReorder,
-        1 => InputOption::CombiOnDoubleStroke,
-        2 => InputOption::NonChoseongCombi,
-        3 => InputOption::OldJamo,
-        4 => InputOption::존함,
-        5 => InputOption::WordUnitCommit,
+        0 => 입력항목::자동재배치,
+        1 => 입력항목::두번타건조합,
+        2 => 입력항목::첫소리밖조합,
+        3 => 입력항목::옛글자방식,
+        4 => 입력항목::존함,
+        5 => 입력항목::단어단위확적,
         _ => return false,
     };
-    ctx.ic.get_option(opt)
+    ctx.문맥.항목획득(opt)
 }
 ///
 /// `hic` must be null or a valid pointer returned by `korean_ic_new`.
@@ -319,7 +319,7 @@ pub unsafe extern "C" fn korean_ic_select_keyboard(
     hic: *mut KoreanInputContext,
     id: *const c_char,
 ) {
-    let Some(ctx) = get_ctx(hic) else {
+    let Some(ctx) = 문맥획득(hic) else {
         return;
     };
     if id.is_null() {
@@ -327,8 +327,8 @@ pub unsafe extern "C" fn korean_ic_select_keyboard(
     }
     let c_str = unsafe { CStr::from_ptr(id) };
     let new_id = c_str.to_str().unwrap_or("2");
-    if let Ok(new_ic) = InputContext::new(new_id) {
-        ctx.ic = new_ic;
+    if let Ok(new_ic) = 입력문맥::new(new_id) {
+        ctx.문맥 = new_ic;
     }
 }
 
@@ -336,63 +336,62 @@ pub unsafe extern "C" fn korean_ic_select_keyboard(
 /// `hic` must be null or a valid pointer returned by `korean_ic_new`.
 #[no_mangle]
 pub unsafe extern "C" fn korean_ic_is_empty(hic: *mut KoreanInputContext) -> bool {
-    let Some(ctx) = get_ctx(hic) else {
+    let Some(ctx) = 문맥획득(hic) else {
         return true;
     };
-    ctx.ic.is_empty()
+    ctx.문맥.is_empty()
 }
 ///
 /// `hic` must be null or a valid pointer returned by `korean_ic_new`.
 #[no_mangle]
 pub unsafe extern "C" fn korean_ic_has_initial(hic: *mut KoreanInputContext) -> bool {
-    let Some(ctx) = get_ctx(hic) else {
+    let Some(ctx) = 문맥획득(hic) else {
         return false;
     };
-    ctx.ic.has_initial()
+    ctx.문맥.첫소리있는가()
 }
 ///
 /// `hic` must be null or a valid pointer returned by `korean_ic_new`.
 #[no_mangle]
 pub unsafe extern "C" fn korean_ic_has_medial(hic: *mut KoreanInputContext) -> bool {
-    let Some(ctx) = get_ctx(hic) else {
+    let Some(ctx) = 문맥획득(hic) else {
         return false;
     };
-    ctx.ic.has_medial()
+    ctx.문맥.가운데소리있는가()
 }
 ///
 /// `hic` must be null or a valid pointer returned by `korean_ic_new`.
 #[no_mangle]
 pub unsafe extern "C" fn korean_ic_has_final(hic: *mut KoreanInputContext) -> bool {
-    let Some(ctx) = get_ctx(hic) else {
+    let Some(ctx) = 문맥획득(hic) else {
         return false;
     };
-    ctx.ic.has_final()
+    ctx.문맥.끝소리있는가()
 }
 ///
 /// `hic` must be null or a valid pointer returned by `korean_ic_new`.
 #[no_mangle]
 pub unsafe extern "C" fn korean_ic_is_transliteration(hic: *mut KoreanInputContext) -> bool {
-    let Some(ctx) = get_ctx(hic) else {
+    let Some(ctx) = 문맥획득(hic) else {
         return false;
     };
-    ctx.ic.is_transliteration()
+    ctx.문맥.전사방식인가()
 }
 ///
 /// `hic` must be null or a valid pointer returned by `korean_ic_new`.
 #[no_mangle]
 pub unsafe extern "C" fn korean_ic_set_output_mode(hic: *mut KoreanInputContext, mode: c_int) {
-    let Some(ctx) = get_ctx(hic) else {
+    let Some(ctx) = 문맥획득(hic) else {
         return;
     };
     if mode == KOREAN_OUTPUT_JAMO {
-        ctx.ic
-            .set_output_mode(crate::input_context::OutputMode::자모);
+        ctx.문맥.출력방식_설정(crate::input_context::출력방식::자모);
     } else {
-        ctx.ic
-            .set_output_mode(crate::input_context::OutputMode::소리마디);
+        ctx.문맥
+            .출력방식_설정(crate::input_context::출력방식::소리마디);
     }
 }
-use crate::hanja::{한자사전, 한자};
+use crate::hanja::{한자, 한자사전};
 
 #[repr(C)]
 pub struct 한자방식 {
@@ -409,15 +408,15 @@ pub struct 한자Ffi {
     _private: [u8; 0],
 }
 
-struct Managed한자목록 {
-    key: CString,
-    entries: Vec<Managed한자Ffi>,
+struct 관리한자목록 {
+    열쇠: CString,
+    entries: Vec<관리한자FFI>,
 }
 
-struct Managed한자Ffi {
-    key: CString,
-    value: CString,
-    comment: CString,
+struct 관리한자FFI {
+    열쇠: CString,
+    값: CString,
+    설명: CString,
 }
 
 ///
@@ -442,7 +441,7 @@ pub unsafe extern "C" fn hanja_table_load(filename: *const c_char) -> *mut 한�
         return std::ptr::null_mut();
     }
 
-    한자사전::load(&path)
+    한자사전::적재(&path)
         .map(|dict| Box::into_raw(Box::new(dict)).cast::<한자방식>())
         .unwrap_or(std::ptr::null_mut())
 }
@@ -455,19 +454,19 @@ pub unsafe extern "C" fn hanja_table_delete(table: *mut 한자방식) {
         drop(Box::from_raw(table.cast::<한자사전>()));
     }
 }
-fn make_hanja_list(key: &str, entries: Vec<한자>) -> *mut 한자목록 {
-    let managed_key = CString::new(key).unwrap_or_default();
-    let managed_entries: Vec<Managed한자Ffi> = entries
+fn make_hanja_list(열쇠: &str, entries: Vec<한자>) -> *mut 한자목록 {
+    let managed_key = CString::new(열쇠).unwrap_or_default();
+    let managed_entries: Vec<관리한자FFI> = entries
         .into_iter()
-        .map(|e| Managed한자Ffi {
-            key: CString::new(e.key).unwrap_or_default(),
-            value: CString::new(e.value).unwrap_or_default(),
-            comment: CString::new(e.comment.unwrap_or_default()).unwrap_or_default(),
+        .map(|e| 관리한자FFI {
+            열쇠: CString::new(e.열쇠).unwrap_or_default(),
+            값: CString::new(e.값).unwrap_or_default(),
+            설명: CString::new(e.설명.unwrap_or_default()).unwrap_or_default(),
         })
         .collect();
 
-    let list = Managed한자목록 {
-        key: managed_key,
+    let list = 관리한자목록 {
+        열쇠: managed_key,
         entries: managed_entries,
     };
 
@@ -476,21 +475,21 @@ fn make_hanja_list(key: &str, entries: Vec<한자>) -> *mut 한자목록 {
 
 ///
 /// `table` must be null or a pointer returned by `hanja_table_load`.
-/// `key` must be a valid null-terminated C string.
+/// `열쇠` must be a valid null-terminated C string.
 #[no_mangle]
 pub unsafe extern "C" fn hanja_table_match_exact(
     table: *const 한자방식,
-    key: *const c_char,
+    열쇠: *const c_char,
 ) -> *mut 한자목록 {
-    if table.is_null() || key.is_null() {
+    if table.is_null() || 열쇠.is_null() {
         return std::ptr::null_mut();
     }
     let dict = unsafe { &*table.cast::<한자사전>() };
-    let c_str = unsafe { CStr::from_ptr(key) };
+    let c_str = unsafe { CStr::from_ptr(열쇠) };
     let Ok(key_str) = c_str.to_str() else {
         return std::ptr::null_mut();
     };
-    dict.match_exact(key_str)
+    dict.완전일치(key_str)
         .map_or(std::ptr::null_mut(), |entries| {
             make_hanja_list(key_str, entries)
         })
@@ -498,21 +497,21 @@ pub unsafe extern "C" fn hanja_table_match_exact(
 
 ///
 /// `table` must be null or a pointer returned by `hanja_table_load`.
-/// `key` must be a valid null-terminated C string.
+/// `열쇠` must be a valid null-terminated C string.
 #[no_mangle]
 pub unsafe extern "C" fn hanja_table_match_prefix(
     table: *const 한자방식,
-    key: *const c_char,
+    열쇠: *const c_char,
 ) -> *mut 한자목록 {
-    if table.is_null() || key.is_null() {
+    if table.is_null() || 열쇠.is_null() {
         return std::ptr::null_mut();
     }
     let dict = unsafe { &*table.cast::<한자사전>() };
-    let c_str = unsafe { CStr::from_ptr(key) };
+    let c_str = unsafe { CStr::from_ptr(열쇠) };
     let Ok(key_str) = c_str.to_str() else {
         return std::ptr::null_mut();
     };
-    let entries = dict.match_prefix(key_str);
+    let entries = dict.앞부분일치(key_str);
     if entries.is_empty() {
         return std::ptr::null_mut();
     }
@@ -521,21 +520,21 @@ pub unsafe extern "C" fn hanja_table_match_prefix(
 
 ///
 /// `table` must be null or a pointer returned by `hanja_table_load`.
-/// `key` must be a valid null-terminated C string.
+/// `열쇠` must be a valid null-terminated C string.
 #[no_mangle]
 pub unsafe extern "C" fn hanja_table_match_suffix(
     table: *const 한자방식,
-    key: *const c_char,
+    열쇠: *const c_char,
 ) -> *mut 한자목록 {
-    if table.is_null() || key.is_null() {
+    if table.is_null() || 열쇠.is_null() {
         return std::ptr::null_mut();
     }
     let dict = unsafe { &*table.cast::<한자사전>() };
-    let c_str = unsafe { CStr::from_ptr(key) };
+    let c_str = unsafe { CStr::from_ptr(열쇠) };
     let Ok(key_str) = c_str.to_str() else {
         return std::ptr::null_mut();
     };
-    let entries = dict.match_suffix(key_str);
+    let entries = dict.뒤부분일치(key_str);
     if entries.is_empty() {
         return std::ptr::null_mut();
     }
@@ -549,7 +548,7 @@ pub unsafe extern "C" fn hanja_list_get_size(list: *const 한자목록) -> c_int
     let Some(ptr) = NonNull::new(list as *mut 한자목록) else {
         return 0;
     };
-    let managed = unsafe { ptr.cast::<Managed한자목록>().as_ref() };
+    let managed = unsafe { ptr.cast::<관리한자목록>().as_ref() };
     managed.entries.len() as c_int
 }
 ///
@@ -560,25 +559,24 @@ pub unsafe extern "C" fn hanja_list_get_key(list: *const 한자목록) -> *const
     let Some(ptr) = NonNull::new(list as *mut 한자목록) else {
         return std::ptr::null();
     };
-    let managed = unsafe { ptr.cast::<Managed한자목록>().as_ref() };
-    managed.key.as_ptr()
+    let managed = unsafe { ptr.cast::<관리한자목록>().as_ref() };
+    managed.열쇠.as_ptr()
 }
 ///
 /// `list` must be null or a pointer returned by hanja_table_match_*.
 /// The returned pointer is valid as long as `list` is not deleted.
 #[no_mangle]
 pub unsafe extern "C" fn hanja_list_get_nth_key(
-    list: *const 한자목록,
-    n: c_uint,
+    list: *const 한자목록, n: c_uint
 ) -> *const c_char {
     let Some(ptr) = NonNull::new(list as *mut 한자목록) else {
         return std::ptr::null();
     };
-    let managed = unsafe { ptr.cast::<Managed한자목록>().as_ref() };
+    let managed = unsafe { ptr.cast::<관리한자목록>().as_ref() };
     managed
         .entries
         .get(n as usize)
-        .map_or(std::ptr::null(), |e| e.key.as_ptr())
+        .map_or(std::ptr::null(), |e| e.열쇠.as_ptr())
 }
 ///
 /// `list` must be null or a pointer returned by hanja_table_match_*.
@@ -591,11 +589,11 @@ pub unsafe extern "C" fn hanja_list_get_nth_value(
     let Some(ptr) = NonNull::new(list as *mut 한자목록) else {
         return std::ptr::null();
     };
-    let managed = unsafe { ptr.cast::<Managed한자목록>().as_ref() };
+    let managed = unsafe { ptr.cast::<관리한자목록>().as_ref() };
     managed
         .entries
         .get(n as usize)
-        .map_or(std::ptr::null(), |e| e.value.as_ptr())
+        .map_or(std::ptr::null(), |e| e.값.as_ptr())
 }
 ///
 /// `list` must be null or a pointer returned by hanja_table_match_*.
@@ -608,26 +606,28 @@ pub unsafe extern "C" fn hanja_list_get_nth_comment(
     let Some(ptr) = NonNull::new(list as *mut 한자목록) else {
         return std::ptr::null();
     };
-    let managed = unsafe { ptr.cast::<Managed한자목록>().as_ref() };
+    let managed = unsafe { ptr.cast::<관리한자목록>().as_ref() };
     managed
         .entries
         .get(n as usize)
-        .map_or(std::ptr::null(), |e| e.comment.as_ptr())
+        .map_or(std::ptr::null(), |e| e.설명.as_ptr())
 }
 ///
 /// `list` must be null or a pointer returned by hanja_table_match_*.
 /// The returned pointer is valid as long as `list` is not deleted.
 #[no_mangle]
-pub unsafe extern "C" fn hanja_list_get_nth(list: *const 한자목록, n: c_uint) -> *const 한자Ffi {
+pub unsafe extern "C" fn hanja_list_get_nth(
+    list: *const 한자목록, n: c_uint
+) -> *const 한자Ffi {
     let Some(ptr) = NonNull::new(list as *mut 한자목록) else {
         return std::ptr::null();
     };
-    let managed = unsafe { ptr.cast::<Managed한자목록>().as_ref() };
+    let managed = unsafe { ptr.cast::<관리한자목록>().as_ref() };
     managed
         .entries
         .get(n as usize)
         .map_or(std::ptr::null(), |e| {
-            std::ptr::from_ref::<Managed한자Ffi>(e).cast::<한자Ffi>()
+            std::ptr::from_ref::<관리한자FFI>(e).cast::<한자Ffi>()
         })
 }
 ///
@@ -636,7 +636,7 @@ pub unsafe extern "C" fn hanja_list_get_nth(list: *const 한자목록, n: c_uint
 #[no_mangle]
 pub unsafe extern "C" fn hanja_list_delete(list: *mut 한자목록) {
     if !list.is_null() {
-        drop(Box::from_raw(list.cast::<Managed한자목록>()));
+        drop(Box::from_raw(list.cast::<관리한자목록>()));
     }
 }
 ///
@@ -647,8 +647,8 @@ pub unsafe extern "C" fn hanja_get_key(hanja: *const 한자Ffi) -> *const c_char
     let Some(ptr) = NonNull::new(hanja as *mut 한자Ffi) else {
         return std::ptr::null();
     };
-    let managed = unsafe { ptr.cast::<Managed한자Ffi>().as_ref() };
-    managed.key.as_ptr()
+    let managed = unsafe { ptr.cast::<관리한자FFI>().as_ref() };
+    managed.열쇠.as_ptr()
 }
 ///
 /// `hanja` must be null or a pointer returned by `hanja_list_get_nth`.
@@ -658,8 +658,8 @@ pub unsafe extern "C" fn hanja_get_value(hanja: *const 한자Ffi) -> *const c_ch
     let Some(ptr) = NonNull::new(hanja as *mut 한자Ffi) else {
         return std::ptr::null();
     };
-    let managed = unsafe { ptr.cast::<Managed한자Ffi>().as_ref() };
-    managed.value.as_ptr()
+    let managed = unsafe { ptr.cast::<관리한자FFI>().as_ref() };
+    managed.값.as_ptr()
 }
 ///
 /// `hanja` must be null or a pointer returned by `hanja_list_get_nth`.
@@ -669,6 +669,6 @@ pub unsafe extern "C" fn hanja_get_comment(hanja: *const 한자Ffi) -> *const c_
     let Some(ptr) = NonNull::new(hanja as *mut 한자Ffi) else {
         return std::ptr::null();
     };
-    let managed = unsafe { ptr.cast::<Managed한자Ffi>().as_ref() };
-    managed.comment.as_ptr()
+    let managed = unsafe { ptr.cast::<관리한자FFI>().as_ref() };
+    managed.설명.as_ptr()
 }

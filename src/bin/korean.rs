@@ -5,8 +5,8 @@
 //! echo "gksrmfdlqfur" | cargo run --bin korean
 //! ```
 
-use korean::input_context::InputContext;
-use korean::keyboard::KeyboardRegistry;
+use korean::input_context::입력문맥;
+use korean::keyboard::건반등록기;
 use std::io::{self, Read};
 use std::process;
 
@@ -56,7 +56,7 @@ fn main() {
         process::exit(0);
     }
 
-    let mut ic = match InputContext::new(&keyboard) {
+    let mut ic = match 입력문맥::new(&keyboard) {
         Ok(ic) => ic,
         Err(e) => {
             eprintln!("Error: {e}");
@@ -73,22 +73,22 @@ fn main() {
     }
 }
 
-fn process_string(ic: &mut InputContext, input: &str) {
+fn process_string(ic: &mut 입력문맥, input: &str) {
     let mut output = String::new();
 
     for ch in input.chars() {
-        if ic.process(ch) {
-            let commit = ic.get_commit_string();
+        if ic.처리(ch) {
+            let commit = ic.결속문자렬();
             if !commit.is_empty() {
                 output.push_str(commit);
             }
         } else {
-            output.push_str(&ic.flush());
+            output.push_str(&ic.비우기());
             output.push(ch);
         }
     }
 
-    let remaining = ic.flush();
+    let remaining = ic.비우기();
     if !remaining.is_empty() {
         output.push_str(&remaining);
     }
@@ -97,7 +97,7 @@ fn process_string(ic: &mut InputContext, input: &str) {
 }
 
 fn list_keyboard_layouts() {
-    for layout in KeyboardRegistry::list() {
+    for layout in 건반등록기::목록() {
         println!("{:<12} {}", layout.id, layout.name);
     }
 }

@@ -4,62 +4,62 @@ use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug)]
-pub struct InputOptions {
-    pub auto_reorder: bool,
-    pub combi_on_double_stroke: bool,
-    pub non_initial_combi: bool,
-    pub medial_combi: bool,
-    pub treat_final_as_initial: bool,
-    pub old_jamo_mode: bool,
+pub struct 입력설정 {
+    pub 자동재배치: bool,
+    pub 두번치기_조합: bool,
+    pub 첫소리밖조합: bool,
+    pub 가운데소리조합: bool,
+    pub 끝소리를_첫소리로_처리: bool,
+    pub 옛글자방식: bool,
     pub 존함: bool,
-    pub word_unit_commit: bool,
+    pub 단어단위확정: bool,
 }
 
-impl Default for InputOptions {
+impl Default for 입력설정 {
     fn default() -> Self {
         Self {
-            auto_reorder: false,
-            combi_on_double_stroke: false,
-            non_initial_combi: false,
-            medial_combi: true,
-            treat_final_as_initial: true,
-            old_jamo_mode: false,
+            자동재배치: false,
+            두번치기_조합: false,
+            첫소리밖조합: false,
+            가운데소리조합: true,
+            끝소리를_첫소리로_처리: true,
+            옛글자방식: false,
             존함: false,
-            word_unit_commit: false,
+            단어단위확정: false,
         }
     }
 }
 
 #[derive(Hash, Serialize, Deserialize, Debug, EnumSetType)]
 #[enumset(serialize_repr = "list")]
-pub enum Addon {
+pub enum 부가기능 {
     첫소리된소리조합,
     가운데소리된소리조합,
     끝소리된소리조합,
     첫소리된소리분해,
     가운데소리된소리분해,
     끝소리된소리분해,
-    FlexibleComposeOrder,
-    Treat끝소리As첫소리,
-    Treat끝소리As첫소리Compose,
+    유연조합순서,
+    끝소리를_첫소리로_처리,
+    끝소리를_첫소리로_처리조합,
 }
 
-pub fn default_addons() -> EnumSet<Addon> {
-    EnumSet::only(Addon::첫소리된소리조합).union(EnumSet::only(Addon::Treat끝소리As첫소리))
+pub fn default_addons() -> EnumSet<부가기능> {
+    EnumSet::only(부가기능::첫소리된소리조합).union(EnumSet::only(부가기능::끝소리를_첫소리로_처리))
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
-pub enum PreeditJohabLevel {
-    Always,
+pub enum 편집조합수준 {
+    항상,
     #[default]
-    Needed,
-    Never,
+    필요할때,
+    안함,
 }
 
-macro_rules! impl_jamo {
+macro_rules! 자모_구현 {
     ($ty:ty, [$(($item:ident, $ch:expr)),+ $(,)?]) => {
         impl $ty {
-            pub const fn jamo(self) -> char {
+            pub const fn 자모(self) -> char {
                 match self {
                     $(Self::$item => $ch,)+
                 }
@@ -75,7 +75,7 @@ macro_rules! impl_jamo {
     };
 }
 
-macro_rules! impl_traits {
+macro_rules! 특성_구현 {
     ($ty:ty, $first_ch:expr) => {
         impl std::fmt::Display for $ty {
             fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -865,7 +865,7 @@ impl From<끝소리> for char {
     }
 }
 
-impl_jamo!(
+자모_구현!(
     첫소리,
     [
         (기윽, 'ㄱ'),
@@ -995,7 +995,7 @@ impl_jamo!(
     ]
 );
 
-impl_jamo!(
+자모_구현!(
     가운데소리,
     [
         (아, 'ㅏ'),
@@ -1095,7 +1095,7 @@ impl_jamo!(
     ]
 );
 
-impl_jamo!(
+자모_구현!(
     끝소리,
     [
         (기윽, 'ㄱ'),
@@ -1238,9 +1238,9 @@ impl_jamo!(
     ]
 );
 
-impl_traits!(첫소리, '\u{1100}');
-impl_traits!(가운데소리, '\u{1161}');
-impl_traits!(끝소리, '\u{11A8}');
+특성_구현!(첫소리, '\u{1100}');
+특성_구현!(가운데소리, '\u{1161}');
+특성_구현!(끝소리, '\u{11A8}');
 
 pub const fn 첫소리_끝소리_변환(첫소리: 첫소리) -> Option<끝소리> {
     match 첫소리 {

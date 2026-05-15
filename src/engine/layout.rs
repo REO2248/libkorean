@@ -1,44 +1,44 @@
 use std::collections::BTreeMap;
 
-use crate::engine::KeyValue;
+use crate::engine::건값;
 
-const KEYBOARD_SEARCH_PATHS: &[&str] = &[
+const 건반검색경로: &[&str] = &[
     "/usr/share/libkorean/keyboards",
 ];
 
 #[derive(Clone)]
-pub struct Layout {
-    map: BTreeMap<String, KeyValue>,
+pub struct 건반배렬 {
+    지도: BTreeMap<String, 건값>,
 }
 
-impl Layout {
-    pub fn new(id: &str) -> Result<Self, crate::input_context::LayoutError> {
+impl 건반배렬 {
+    pub fn new(id: &str) -> Result<Self, crate::input_context::건반배렬에러> {
         let manifest_path = format!("{}/data/keyboards/{id}.yaml", env!("CARGO_MANIFEST_DIR"));
         if let Ok(content) = std::fs::read_to_string(&manifest_path) {
-            return Self::from_yaml(&content);
+            return Self::yaml에서(&content);
         }
 
         let crate_path = format!("data/keyboards/{id}.yaml");
         if let Ok(content) = std::fs::read_to_string(&crate_path) {
-            return Self::from_yaml(&content);
+            return Self::yaml에서(&content);
         }
 
-        let sys_path = format!("{}/{id}.yaml", crate::keyboard::SYSTEM_KEYBOARD_DIR);
+        let sys_path = format!("{}/{id}.yaml", crate::keyboard::체계건반경로);
         if let Ok(content) = std::fs::read_to_string(&sys_path) {
-            return Self::from_yaml(&content);
+            return Self::yaml에서(&content);
         }
 
-        Err(crate::input_context::LayoutError::Unknown(id.into()))
+        Err(crate::input_context::건반배렬에러::알수없음(id.into()))
     }
 
-    pub fn from_file(path: &str) -> Result<Self, crate::input_context::LayoutError> {
+    pub fn 화일에서(path: &str) -> Result<Self, crate::input_context::건반배렬에러> {
         let content = std::fs::read_to_string(path)
-            .map_err(|_| crate::input_context::LayoutError::Unknown(path.into()))?;
-        Self::from_yaml(&content)
+            .map_err(|_| crate::input_context::건반배렬에러::알수없음(path.into()))?;
+        Self::yaml에서(&content)
     }
 
-    pub fn from_yaml(yaml: &str) -> Result<Self, crate::input_context::LayoutError> {
-        let mut map = BTreeMap::new();
+    pub fn yaml에서(yaml: &str) -> Result<Self, crate::input_context::건반배렬에러> {
+        let mut 지도 = BTreeMap::new();
 
         for line in yaml.lines() {
             let line = line.trim();
@@ -87,22 +87,22 @@ impl Layout {
                     _ => key_str.to_string(),
                 };
 
-                if let Ok(kv) = value_part.parse::<KeyValue>() {
-                    map.insert(final_key, kv);
+                if let Ok(kv) = value_part.parse::<건값>() {
+                    지도.insert(final_key, kv);
                 }
             }
         }
 
-        Ok(Self { map })
+        Ok(Self { 지도 })
     }
 
-    pub fn lookup(&self, input: &str, case_insensitive: bool) -> Option<KeyValue> {
-        if let Some(kv) = self.map.get(input).copied() {
+    pub fn 찾기(&self, input: &str, case_insensitive: bool) -> Option<건값> {
+        if let Some(kv) = self.지도.get(input).copied() {
             return Some(kv);
         }
         if case_insensitive {
             let lower = input.to_lowercase();
-            for (k, v) in &self.map {
+            for (k, v) in &self.지도 {
                 if k.to_lowercase() == lower {
                     return Some(*v);
                 }
@@ -111,8 +111,8 @@ impl Layout {
         None
     }
 
-    pub fn is_prefix(&self, input: &str, case_insensitive: bool) -> bool {
-        if self.map
+    pub fn 앞붙이인가(&self, input: &str, case_insensitive: bool) -> bool {
+        if self.지도
             .range(input.to_string()..)
             .any(|(k, _)| k.len() > input.len() && k.starts_with(input))
         {
@@ -121,7 +121,7 @@ impl Layout {
 
         if case_insensitive {
             let lower = input.to_lowercase();
-            for k in self.map.keys() {
+            for k in self.지도.keys() {
                 if k.len() > lower.len() && k.to_lowercase().starts_with(&lower) {
                     return true;
                 }
@@ -130,20 +130,20 @@ impl Layout {
         false
     }
 
-    pub fn has_old_jamo(&self) -> bool {
-        self.map.values().any(super::compose::KeyValue::has_old_jamo)
+    pub fn 옛글자가_있는가(&self) -> bool {
+        self.지도.values().any(super::compose::건값::옛글자가_있는가)
     }
 
-    pub fn has_multi_char_keys(&self) -> bool {
-        self.map.keys().any(|k| k.chars().count() > 1)
+    pub fn 다중문자건이_있는가(&self) -> bool {
+        self.지도.keys().any(|k| k.chars().count() > 1)
     }
 }
 
-pub fn discover_layouts() -> Vec<String> {
+pub fn 배렬목록찾기() -> Vec<String> {
     let mut layouts = Vec::new();
     let mut seen = std::collections::HashSet::new();
 
-    for dir in KEYBOARD_SEARCH_PATHS {
+    for dir in 건반검색경로 {
         if let Ok(entries) = std::fs::read_dir(dir) {
             for entry in entries.filter_map(std::result::Result::ok) {
                 let path = entry.path();

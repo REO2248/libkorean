@@ -1,34 +1,34 @@
 use std::ffi::CString;
 use std::sync::OnceLock;
 
-pub const SYSTEM_KEYBOARD_DIR: &str = "/usr/share/libkorean/keyboards";
+pub const 체계건반경로: &str = "/usr/share/libkorean/keyboards";
 
 #[derive(Debug, Clone)]
-pub struct KeyboardLayout {
+pub struct 건반배렬 {
     pub id: String,
     pub name: String,
     pub id_cstr: CString,
     pub name_cstr: CString,
 }
 
-static REGISTRY: OnceLock<Vec<KeyboardLayout>> = OnceLock::new();
+static REGISTRY: OnceLock<Vec<건반배렬>> = OnceLock::new();
 
-pub struct KeyboardRegistry;
+pub struct 건반등록기;
 
-impl KeyboardRegistry {
-    pub fn list() -> impl Iterator<Item = &'static KeyboardLayout> {
-        REGISTRY.get_or_init(Self::discover).iter()
+impl 건반등록기 {
+    pub fn 목록() -> impl Iterator<Item = &'static 건반배렬> {
+        REGISTRY.get_or_init(Self::찾기).iter()
     }
 
-    pub fn get(id: &str) -> Option<KeyboardLayout> {
-        Self::list().find(|l| l.id == id).cloned()
+    pub fn 획득(id: &str) -> Option<건반배렬> {
+        Self::목록().find(|l| l.id == id).cloned()
     }
 
-    fn discover() -> Vec<KeyboardLayout> {
+    fn 찾기() -> Vec<건반배렬> {
         let mut layouts = Vec::new();
         let mut seen = std::collections::HashSet::new();
 
-        if let Ok(entries) = std::fs::read_dir(SYSTEM_KEYBOARD_DIR) {
+        if let Ok(entries) = std::fs::read_dir(체계건반경로) {
             for entry in entries.filter_map(std::result::Result::ok) {
                 let path = entry.path();
                 if let Some(layout) = Self::layout_from_path(&path, &mut seen) {
@@ -54,7 +54,7 @@ impl KeyboardRegistry {
     fn layout_from_path(
         path: &std::path::Path,
         seen: &mut std::collections::HashSet<String>,
-    ) -> Option<KeyboardLayout> {
+    ) -> Option<건반배렬> {
         if path.extension().is_some_and(|ext| ext == "yaml") {
             if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
                 let id = stem.to_string();
@@ -62,7 +62,7 @@ impl KeyboardRegistry {
                     let name = Self::read_display_name(path).unwrap_or_else(|| id.clone());
                     let id_cstr = CString::new(id.as_str()).unwrap_or_default();
                     let name_cstr = CString::new(name.as_str()).unwrap_or_default();
-                    return Some(KeyboardLayout {
+                    return Some(건반배렬 {
                         id,
                         name,
                         id_cstr,

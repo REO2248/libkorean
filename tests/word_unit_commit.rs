@@ -1,52 +1,52 @@
-use korean::input_context::{InputContext, InputOption};
+use korean::input_context::{입력문맥, 입력항목};
 
-fn create_ic(layout: &str) -> InputContext {
-    InputContext::new(layout).expect("valid layout")
+fn 문맥생성(layout: &str) -> 입력문맥 {
+    입력문맥::new(layout).expect("valid layout")
 }
 
 #[test]
 fn test_word_unit_commit_backspace() {
-    let mut ic = create_ic("kps9256");
-    ic.set_option(InputOption::WordUnitCommit, true);
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.항목설정(입력항목::단어단위확적, true);
     
     // guryd -> 수령
     // g (ㅅ)
-    ic.process('g');
-    assert_eq!(ic.preedit_string(), "ㅅ");
+    문맥.처리('g');
+    assert_eq!(문맥.편집문자렬(), "ㅅ");
     
     // u (ㅜ)
-    ic.process('u');
-    assert_eq!(ic.preedit_string(), "수");
+    문맥.처리('u');
+    assert_eq!(문맥.편집문자렬(), "수");
     
     // r (ㄹ)
-    ic.process('r');
-    assert_eq!(ic.preedit_string(), "술");
+    문맥.처리('r');
+    assert_eq!(문맥.편집문자렬(), "술");
     
     // y (ㅕ)
-    ic.process('y');
-    assert_eq!(ic.preedit_string(), "수려"); // ㄹ moved to next syllable
+    문맥.처리('y');
+    assert_eq!(문맥.편집문자렬(), "수려"); // ㄹ moved to next syllable
     
     // d (ㅇ)
-    ic.process('d');
-    assert_eq!(ic.preedit_string(), "수령");
+    문맥.처리('d');
+    assert_eq!(문맥.편집문자렬(), "수령");
     
     // Backspace once -> "수려"
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "수려");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "수려");
     
     // Backspace twice -> "술"
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "술");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "술");
     
     // Backspace thrice -> "수"
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "수");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "수");
     
     // Backspace 4 times -> "ㅅ"
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "ㅅ");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "ㅅ");
     
     // Backspace 5 times -> ""
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "");
 }

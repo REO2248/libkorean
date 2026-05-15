@@ -1,19 +1,19 @@
-use super::jamo::{첫소리_끝소리_변환, 끝소리, 첫소리, InputOptions, 가운데소리};
+use super::jamo::{
+    입력설정, 가운데소리, 끝소리, 첫소리, 첫소리_끝소리_변환
+};
 use num_traits::FromPrimitive;
 use std::str::FromStr;
 impl 첫소리 {
-    pub const FILLER: char = '\u{115F}';
+    pub const 채움문자: char = '\u{115F}';
 
-    pub const fn is_old(self) -> bool {
+    pub const fn 옛글자인가(self) -> bool {
         self as u32 > 18
     }
 
     #[must_use]
-    pub fn compose(self, 가운데소리: 가운데소리, 끝소리: Option<끝소리>) -> String {
+    pub fn 조합(self, 가운데소리: 가운데소리, 끝소리: Option<끝소리>) -> String {
         let mut s = String::new();
-        if (self as u32) < 19
-            && (가운데소리 as u32) < 21
-            && 끝소리.is_none_or(|j| (j as u32) < 27)
+        if (self as u32) < 19 && (가운데소리 as u32) < 21 && 끝소리.is_none_or(|j| (j as u32) < 27)
         {
             s.push(unsafe {
                 std::char::from_u32_unchecked(
@@ -33,7 +33,7 @@ impl 첫소리 {
         s
     }
 
-    pub fn decompose(ch: char) -> Option<(Self, 가운데소리, Option<끝소리>)> {
+    pub fn 분해(ch: char) -> Option<(Self, 가운데소리, Option<끝소리>)> {
         let n = ch as u32;
         let offset = n.checked_sub(0xAC00)?;
         let 첫소리 = FromPrimitive::from_u32(offset / 588)?;
@@ -47,8 +47,8 @@ impl 첫소리 {
         Some((첫소리, 가운데소리, 끝소리))
     }
 
-    pub const fn try_add(self, other: Self, opts: InputOptions) -> Option<Self> {
-        if opts.combi_on_double_stroke {
+    pub const fn try_add(self, other: Self, opts: 입력설정) -> Option<Self> {
+        if opts.두번치기_조합 {
             match (self, other) {
                 (Self::기윽, Self::기윽) => return Some(Self::된기윽),
                 (Self::비읍, Self::비읍) => return Some(Self::된비읍),
@@ -59,7 +59,7 @@ impl 첫소리 {
             }
         }
 
-        if opts.old_jamo_mode {
+        if opts.옛글자방식 {
             if let result @ Some(_) = match (self, other) {
                 (Self::기윽, Self::기윽) => Some(Self::된기윽),
                 (Self::기윽, Self::디읃) => Some(Self::기윽디읃),
@@ -195,13 +195,13 @@ impl 첫소리 {
 }
 
 impl 가운데소리 {
-    pub const FILLER: char = '\u{1160}';
+    pub const 채움문자: char = '\u{1160}';
 
-    pub const fn is_old(self) -> bool {
+    pub const fn 옛글자인가(self) -> bool {
         self as u32 > 20
     }
 
-    pub const fn try_add(self, other: Self, opts: InputOptions) -> Option<Self> {
+    pub const fn try_add(self, other: Self, opts: 입력설정) -> Option<Self> {
         match (self, other) {
             (Self::아, Self::이) => Some(Self::애),
             (Self::야, Self::이) => Some(Self::얘),
@@ -214,104 +214,104 @@ impl 가운데소리 {
             (Self::우, Self::이) => Some(Self::위),
             (Self::우, Self::에) | (Self::워, Self::이) => Some(Self::웨),
             (Self::으, Self::이) => Some(Self::의),
-            (Self::의, Self::우) if opts.old_jamo_mode => Some(Self::의우),
-            (Self::이, Self::아) if opts.old_jamo_mode => Some(Self::이아),
-            (Self::이, Self::야) if opts.old_jamo_mode => Some(Self::이야),
-            (Self::이, Self::얘) if opts.old_jamo_mode => Some(Self::이얘),
-            (Self::이, Self::여) if opts.old_jamo_mode => Some(Self::이여),
-            (Self::이, Self::예) if opts.old_jamo_mode => Some(Self::이예),
-            (Self::이, Self::오) if opts.old_jamo_mode => Some(Self::이오),
-            (Self::이, Self::요) if opts.old_jamo_mode => Some(Self::이요),
-            (Self::이, Self::우) if opts.old_jamo_mode => Some(Self::이우),
-            (Self::이, Self::유) if opts.old_jamo_mode => Some(Self::이유),
-            (Self::이, Self::으) if opts.old_jamo_mode => Some(Self::이으),
-            (Self::이, Self::이) if opts.old_jamo_mode => Some(Self::이이),
-            (Self::이, Self::이야오) if opts.old_jamo_mode => Some(Self::이야오),
-            (Self::이, Self::아래아) if opts.old_jamo_mode => Some(Self::이아래아),
-            (Self::오오, Self::이) if opts.old_jamo_mode => Some(Self::오오이),
-            (Self::이야, Self::오) if opts.old_jamo_mode => Some(Self::이야오),
-            (Self::이오, Self::이) if opts.old_jamo_mode => Some(Self::이오이),
-            (Self::아래아, Self::아) if opts.old_jamo_mode => Some(Self::아래아아),
-            (Self::아래아, Self::어) if opts.old_jamo_mode => Some(Self::아래아어),
-            (Self::아래아, Self::에) if opts.old_jamo_mode => Some(Self::아래아에),
-            (Self::아래아, Self::우) if opts.old_jamo_mode => Some(Self::아래아우),
-            (Self::아래아, Self::이) if opts.old_jamo_mode => Some(Self::아래아이),
-            (Self::아래아, Self::아래아) if opts.old_jamo_mode => Some(Self::두아래아),
-            (Self::아래아아, Self::아) if opts.old_jamo_mode => Some(Self::두아래아),
+            (Self::의, Self::우) if opts.옛글자방식 => Some(Self::의우),
+            (Self::이, Self::아) if opts.옛글자방식 => Some(Self::이아),
+            (Self::이, Self::야) if opts.옛글자방식 => Some(Self::이야),
+            (Self::이, Self::얘) if opts.옛글자방식 => Some(Self::이얘),
+            (Self::이, Self::여) if opts.옛글자방식 => Some(Self::이여),
+            (Self::이, Self::예) if opts.옛글자방식 => Some(Self::이예),
+            (Self::이, Self::오) if opts.옛글자방식 => Some(Self::이오),
+            (Self::이, Self::요) if opts.옛글자방식 => Some(Self::이요),
+            (Self::이, Self::우) if opts.옛글자방식 => Some(Self::이우),
+            (Self::이, Self::유) if opts.옛글자방식 => Some(Self::이유),
+            (Self::이, Self::으) if opts.옛글자방식 => Some(Self::이으),
+            (Self::이, Self::이) if opts.옛글자방식 => Some(Self::이이),
+            (Self::이, Self::이야오) if opts.옛글자방식 => Some(Self::이야오),
+            (Self::이, Self::아래아) if opts.옛글자방식 => Some(Self::이아래아),
+            (Self::오오, Self::이) if opts.옛글자방식 => Some(Self::오오이),
+            (Self::이야, Self::오) if opts.옛글자방식 => Some(Self::이야오),
+            (Self::이오, Self::이) if opts.옛글자방식 => Some(Self::이오이),
+            (Self::아래아, Self::아) if opts.옛글자방식 => Some(Self::아래아아),
+            (Self::아래아, Self::어) if opts.옛글자방식 => Some(Self::아래아어),
+            (Self::아래아, Self::에) if opts.옛글자방식 => Some(Self::아래아에),
+            (Self::아래아, Self::우) if opts.옛글자방식 => Some(Self::아래아우),
+            (Self::아래아, Self::이) if opts.옛글자방식 => Some(Self::아래아이),
+            (Self::아래아, Self::아래아) if opts.옛글자방식 => Some(Self::두아래아),
+            (Self::아래아아, Self::아) if opts.옛글자방식 => Some(Self::두아래아),
 
-            (Self::아, Self::아) if opts.old_jamo_mode => Some(Self::아래아),
-            (Self::아, Self::오) if opts.old_jamo_mode => Some(Self::아오),
-            (Self::아, Self::우) if opts.old_jamo_mode => Some(Self::아우),
-            (Self::아, Self::으) if opts.old_jamo_mode => Some(Self::아으),
+            (Self::아, Self::아) if opts.옛글자방식 => Some(Self::아래아),
+            (Self::아, Self::오) if opts.옛글자방식 => Some(Self::아오),
+            (Self::아, Self::우) if opts.옛글자방식 => Some(Self::아우),
+            (Self::아, Self::으) if opts.옛글자방식 => Some(Self::아으),
 
-            (Self::야, Self::오) if opts.old_jamo_mode => Some(Self::야오),
-            (Self::야, Self::요) if opts.old_jamo_mode => Some(Self::야요),
-            (Self::야, Self::우) if opts.old_jamo_mode => Some(Self::야우),
+            (Self::야, Self::오) if opts.옛글자방식 => Some(Self::야오),
+            (Self::야, Self::요) if opts.옛글자방식 => Some(Self::야요),
+            (Self::야, Self::우) if opts.옛글자방식 => Some(Self::야우),
 
-            (Self::어, Self::오) if opts.old_jamo_mode => Some(Self::어오),
-            (Self::어, Self::우) if opts.old_jamo_mode => Some(Self::어우),
-            (Self::어, Self::으) if opts.old_jamo_mode => Some(Self::어으),
+            (Self::어, Self::오) if opts.옛글자방식 => Some(Self::어오),
+            (Self::어, Self::우) if opts.옛글자방식 => Some(Self::어우),
+            (Self::어, Self::으) if opts.옛글자방식 => Some(Self::어으),
 
-            (Self::여, Self::야) if opts.old_jamo_mode => Some(Self::여야),
-            (Self::여, Self::오) if opts.old_jamo_mode => Some(Self::여오),
-            (Self::여, Self::우) if opts.old_jamo_mode => Some(Self::여우),
+            (Self::여, Self::야) if opts.옛글자방식 => Some(Self::여야),
+            (Self::여, Self::오) if opts.옛글자방식 => Some(Self::여오),
+            (Self::여, Self::우) if opts.옛글자방식 => Some(Self::여우),
 
-            (Self::오, Self::야) if opts.old_jamo_mode => Some(Self::오야),
-            (Self::오, Self::얘) if opts.old_jamo_mode => Some(Self::오얘),
-            (Self::오, Self::어) if opts.old_jamo_mode => Some(Self::오어),
-            (Self::오, Self::에) if opts.old_jamo_mode => Some(Self::오에),
-            (Self::오, Self::여) if opts.old_jamo_mode => Some(Self::오여),
-            (Self::오, Self::예) if opts.old_jamo_mode => Some(Self::오예),
-            (Self::오, Self::오) if opts.old_jamo_mode => Some(Self::오오),
-            (Self::오, Self::우) if opts.old_jamo_mode => Some(Self::오우),
+            (Self::오, Self::야) if opts.옛글자방식 => Some(Self::오야),
+            (Self::오, Self::얘) if opts.옛글자방식 => Some(Self::오얘),
+            (Self::오, Self::어) if opts.옛글자방식 => Some(Self::오어),
+            (Self::오, Self::에) if opts.옛글자방식 => Some(Self::오에),
+            (Self::오, Self::여) if opts.옛글자방식 => Some(Self::오여),
+            (Self::오, Self::예) if opts.옛글자방식 => Some(Self::오예),
+            (Self::오, Self::오) if opts.옛글자방식 => Some(Self::오오),
+            (Self::오, Self::우) if opts.옛글자방식 => Some(Self::오우),
 
-            (Self::요, Self::아) if opts.old_jamo_mode => Some(Self::요아),
-            (Self::요, Self::애) if opts.old_jamo_mode => Some(Self::요애),
-            (Self::요, Self::야) if opts.old_jamo_mode => Some(Self::요야),
-            (Self::요, Self::얘) if opts.old_jamo_mode => Some(Self::요얘),
-            (Self::요, Self::어) if opts.old_jamo_mode => Some(Self::요어),
-            (Self::요, Self::여) if opts.old_jamo_mode => Some(Self::요여),
-            (Self::요, Self::오) if opts.old_jamo_mode => Some(Self::요오),
-            (Self::요, Self::이) if opts.old_jamo_mode => Some(Self::요이),
-            (Self::우, Self::아) if opts.old_jamo_mode => Some(Self::우아),
-            (Self::우, Self::애) if opts.old_jamo_mode => Some(Self::우애),
+            (Self::요, Self::아) if opts.옛글자방식 => Some(Self::요아),
+            (Self::요, Self::애) if opts.옛글자방식 => Some(Self::요애),
+            (Self::요, Self::야) if opts.옛글자방식 => Some(Self::요야),
+            (Self::요, Self::얘) if opts.옛글자방식 => Some(Self::요얘),
+            (Self::요, Self::어) if opts.옛글자방식 => Some(Self::요어),
+            (Self::요, Self::여) if opts.옛글자방식 => Some(Self::요여),
+            (Self::요, Self::오) if opts.옛글자방식 => Some(Self::요오),
+            (Self::요, Self::이) if opts.옛글자방식 => Some(Self::요이),
+            (Self::우, Self::아) if opts.옛글자방식 => Some(Self::우아),
+            (Self::우, Self::애) if opts.옛글자방식 => Some(Self::우애),
 
-            (Self::우, Self::여) if opts.old_jamo_mode => Some(Self::우여),
-            (Self::우, Self::예) if opts.old_jamo_mode => Some(Self::우예),
-            (Self::우, Self::우) if opts.old_jamo_mode => Some(Self::우우),
+            (Self::우, Self::여) if opts.옛글자방식 => Some(Self::우여),
+            (Self::우, Self::예) if opts.옛글자방식 => Some(Self::우예),
+            (Self::우, Self::우) if opts.옛글자방식 => Some(Self::우우),
 
-            (Self::우, Self::어으) if opts.old_jamo_mode => Some(Self::우어으),
-            (Self::우, Self::이이) if opts.old_jamo_mode => Some(Self::우이이),
-            (Self::워, Self::으) if opts.old_jamo_mode => Some(Self::우어으),
+            (Self::우, Self::어으) if opts.옛글자방식 => Some(Self::우어으),
+            (Self::우, Self::이이) if opts.옛글자방식 => Some(Self::우이이),
+            (Self::워, Self::으) if opts.옛글자방식 => Some(Self::우어으),
 
-            (Self::위, Self::이) if opts.old_jamo_mode => Some(Self::우이이),
-            (Self::유, Self::아) if opts.old_jamo_mode => Some(Self::유아),
-            (Self::유, Self::애) if opts.old_jamo_mode => Some(Self::유애),
-            (Self::유, Self::어) if opts.old_jamo_mode => Some(Self::유어),
-            (Self::유, Self::에) if opts.old_jamo_mode => Some(Self::유에),
-            (Self::유, Self::여) if opts.old_jamo_mode => Some(Self::유여),
-            (Self::유, Self::예) if opts.old_jamo_mode => Some(Self::유예),
-            (Self::유, Self::오) if opts.old_jamo_mode => Some(Self::유오),
-            (Self::유, Self::우) if opts.old_jamo_mode => Some(Self::유우),
-            (Self::유, Self::이) if opts.old_jamo_mode => Some(Self::유이),
-            (Self::으, Self::아) if opts.old_jamo_mode => Some(Self::으아),
-            (Self::으, Self::어) if opts.old_jamo_mode => Some(Self::으어),
-            (Self::으, Self::에) if opts.old_jamo_mode => Some(Self::으에),
-            (Self::으, Self::오) if opts.old_jamo_mode => Some(Self::으오),
-            (Self::으, Self::우) if opts.old_jamo_mode => Some(Self::으우),
-            (Self::으, Self::으) if opts.old_jamo_mode => Some(Self::으으),
+            (Self::위, Self::이) if opts.옛글자방식 => Some(Self::우이이),
+            (Self::유, Self::아) if opts.옛글자방식 => Some(Self::유아),
+            (Self::유, Self::애) if opts.옛글자방식 => Some(Self::유애),
+            (Self::유, Self::어) if opts.옛글자방식 => Some(Self::유어),
+            (Self::유, Self::에) if opts.옛글자방식 => Some(Self::유에),
+            (Self::유, Self::여) if opts.옛글자방식 => Some(Self::유여),
+            (Self::유, Self::예) if opts.옛글자방식 => Some(Self::유예),
+            (Self::유, Self::오) if opts.옛글자방식 => Some(Self::유오),
+            (Self::유, Self::우) if opts.옛글자방식 => Some(Self::유우),
+            (Self::유, Self::이) if opts.옛글자방식 => Some(Self::유이),
+            (Self::으, Self::아) if opts.옛글자방식 => Some(Self::으아),
+            (Self::으, Self::어) if opts.옛글자방식 => Some(Self::으어),
+            (Self::으, Self::에) if opts.옛글자방식 => Some(Self::으에),
+            (Self::으, Self::오) if opts.옛글자방식 => Some(Self::으오),
+            (Self::으, Self::우) if opts.옛글자방식 => Some(Self::으우),
+            (Self::으, Self::으) if opts.옛글자방식 => Some(Self::으으),
 
             _ => None,
         }
     }
 }
 impl 끝소리 {
-    pub const fn is_old(self) -> bool {
+    pub const fn 옛글자인가(self) -> bool {
         self as u32 > 26
     }
 
-    pub const fn try_add(self, other: Self, opts: InputOptions) -> Option<Self> {
-        let compose_ssang = opts.combi_on_double_stroke;
+    pub const fn try_add(self, other: Self, opts: 입력설정) -> Option<Self> {
+        let compose_ssang = opts.두번치기_조합;
 
         match (self, other) {
             (Self::기윽, Self::기윽) if compose_ssang => Some(Self::된기윽),
@@ -327,7 +327,7 @@ impl 끝소리 {
             (Self::리을, Self::피읖) => Some(Self::리을피읖),
             (Self::리을, Self::히읗) => Some(Self::리을히읗),
             (Self::비읍, Self::시읏) => Some(Self::비읍시읏),
-            _ if opts.old_jamo_mode => match (self, other) {
+            _ if opts.옛글자방식 => match (self, other) {
                 (Self::기윽, Self::기윽) => Some(Self::된기윽),
                 (Self::기윽, Self::니은) => Some(Self::기윽니은),
                 (Self::기윽, Self::리을) => Some(Self::기윽리을),
@@ -483,7 +483,7 @@ impl 끝소리 {
         }
     }
 
-    pub const fn to_initial(self) -> 끝소리To첫소리 {
+    pub const fn 첫소리로(self) -> 끝소리To첫소리 {
         use 끝소리To첫소리::{Compose, Direct};
         match self {
             Self::기윽 => Direct(첫소리::기윽),
@@ -635,93 +635,96 @@ pub enum 끝소리To첫소리 {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum KeyValue {
+pub enum 건값 {
     첫소리 {
         첫소리: 첫소리,
     },
     가운데소리 {
         가운데소리: 가운데소리,
-        compose: bool,
+        조합: bool,
     },
     끝소리 {
         끝소리: 끝소리,
     },
-    Both {
+    둘다 {
         첫소리: 첫소리,
         끝소리: 끝소리,
     },
-    ChoJong {
+    첫소리끝소리 {
         첫소리: 첫소리,
         끝소리: 끝소리,
-        first: bool,
+        첫번째: bool,
     },
-    ChoJung {
+    첫소리가운데소리 {
         첫소리: 첫소리,
         가운데소리: 가운데소리,
-        first: bool,
-        compose: bool,
+        첫번째: bool,
+        조합: bool,
     },
-    JungJong {
+    가운데소리끝소리 {
         가운데소리: 가운데소리,
         끝소리: 끝소리,
-        first: bool,
-        compose: bool,
+        첫번째: bool,
+        조합: bool,
     },
-    Pass(char),
+    통과(char),
 }
 
-impl KeyValue {
-    pub const fn has_old_jamo(&self) -> bool {
+impl 건값 {
+    pub const fn 옛글자가_있는가(&self) -> bool {
         match self {
-            Self::첫소리 { 첫소리 } => 첫소리.is_old(),
-            Self::가운데소리 { 가운데소리, .. } => 가운데소리.is_old(),
-            Self::끝소리 { 끝소리 } => 끝소리.is_old(),
-            Self::Both {
-                첫소리,
-                끝소리,
-            } => 첫소리.is_old() || 끝소리.is_old(),
-            Self::ChoJong {
-                첫소리,
-                끝소리,
-                ..
-            } => 첫소리.is_old() || 끝소리.is_old(),
-            Self::ChoJung {
-                첫소리,
-                가운데소리,
-                ..
-            } => 첫소리.is_old() || 가운데소리.is_old(),
-            Self::JungJong {
-                가운데소리,
-                끝소리,
-                ..
-            } => 가운데소리.is_old() || 끝소리.is_old(),
-            Self::Pass(_) => false,
+            Self::첫소리 { 첫소리 } => 첫소리.옛글자인가(),
+            Self::가운데소리 {
+                가운데소리, ..
+            } => 가운데소리.옛글자인가(),
+            Self::끝소리 { 끝소리 } => 끝소리.옛글자인가(),
+            Self::둘다 {
+                첫소리, 끝소리
+            } => 첫소리.옛글자인가() || 끝소리.옛글자인가(),
+            Self::첫소리끝소리 {
+                첫소리, 끝소리,
+            ..
+            } => 첫소리.옛글자인가() || 끝소리.옛글자인가(),
+            Self::첫소리가운데소리 {
+                첫소리, 가운데소리,
+            ..
+            } => 첫소리.옛글자인가() || 가운데소리.옛글자인가(),
+            Self::가운데소리끝소리 {
+                가운데소리, 끝소리,
+            ..
+            } => 가운데소리.옛글자인가() || 끝소리.옛글자인가(),
+            Self::통과(_) => false,
         }
     }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum KeyValuePart {
-    Cho { 첫소리: 첫소리 },
-    Jung { 가운데소리: 가운데소리, compose: bool },
-    Jong { 끝소리: 끝소리 },
+    Cho {
+        첫소리: 첫소리,
+    },
+    Jung {
+        가운데소리: 가운데소리,
+        조합: bool,
+    },
+    Jong {
+        끝소리: 끝소리,
+    },
 }
 
 impl KeyValuePart {
     fn parse(chars: &mut std::str::Chars) -> Option<Self> {
-        use crate::char_utils::compat_to_conjoining;
+        use crate::char_utils::호환자모를_결합자모로;
 
-        let to_initial = |c: char| {
-            첫소리::from_첫소리(c)
-                .or_else(|| 첫소리::from_첫소리(compat_to_conjoining(c)))
+        let 첫소리로 = |c: char| {
+            첫소리::from_첫소리(c).or_else(|| 첫소리::from_첫소리(호환자모를_결합자모로(c)))
         };
         let to_medial = |c: char| {
             가운데소리::from_첫소리(c)
-                .or_else(|| 가운데소리::from_첫소리(compat_to_conjoining(c)))
+                .or_else(|| 가운데소리::from_첫소리(호환자모를_결합자모로(c)))
         };
         let to_final = |c: char| {
-            끝소리::from_첫소리(c)
-                .or_else(|| 끝소리::from_첫소리(compat_to_conjoining(c)))
+            끝소리::from_첫소리(c).or_else(|| 끝소리::from_첫소리(호환자모를_결합자모로(c)))
         };
 
         match chars.next()? {
@@ -730,7 +733,7 @@ impl KeyValuePart {
                 if let Some(가운데소리) = to_medial(next) {
                     Some(Self::Jung {
                         가운데소리,
-                        compose: false,
+                        조합: false,
                     })
                 } else {
                     Some(Self::Jong {
@@ -739,12 +742,12 @@ impl KeyValuePart {
                 }
             }
             c => {
-                if let Some(첫소리) = to_initial(c) {
+                if let Some(첫소리) = 첫소리로(c) {
                     Some(Self::Cho { 첫소리 })
                 } else {
                     Some(Self::Jung {
                         가운데소리: to_medial(c)?,
-                        compose: true,
+                        조합: true,
                     })
                 }
             }
@@ -752,7 +755,7 @@ impl KeyValuePart {
     }
 }
 
-impl FromStr for KeyValue {
+impl FromStr for 건값 {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -760,30 +763,28 @@ impl FromStr for KeyValue {
         let mut next = || KeyValuePart::parse(&mut chars);
 
         match next() {
-            None => Ok(Self::Pass(s.chars().next().ok_or(())?)),
-            Some(first) => match first {
+            None => Ok(Self::통과(s.chars().next().ok_or(())?)),
+            Some(첫번째) => match 첫번째 {
                 KeyValuePart::Cho { 첫소리 } => match next() {
-                    Some(KeyValuePart::Jong { 끝소리 }) => Ok(Self::Both {
-                        첫소리,
-                        끝소리,
+                    Some(KeyValuePart::Jong { 끝소리 }) => Ok(Self::둘다 {
+                        첫소리, 끝소리
                     }),
                     Some(KeyValuePart::Jung {
                         가운데소리,
-                        compose,
-                    }) => Ok(Self::ChoJung {
+                        조합,
+                    }) => Ok(Self::첫소리가운데소리 {
                         첫소리,
                         가운데소리,
-                        first: true,
-                        compose,
+                        첫번째: true,
+                        조합,
                     }),
                     None => {
                         // Check if it's also a valid 끝소리
                         첫소리_끝소리_변환(첫소리).map_or(
                             Ok(Self::첫소리 { 첫소리 }),
                             |끝소리| {
-                                Ok(Self::Both {
-                                    첫소리,
-                                    끝소리,
+                                Ok(Self::둘다 {
+                                    첫소리, 끝소리
                                 })
                             },
                         )
@@ -792,39 +793,38 @@ impl FromStr for KeyValue {
                 },
                 KeyValuePart::Jung {
                     가운데소리,
-                    compose,
+                    조합,
                 } => match next() {
-                    Some(KeyValuePart::Cho { 첫소리 }) => Ok(Self::ChoJung {
+                    Some(KeyValuePart::Cho { 첫소리 }) => Ok(Self::첫소리가운데소리 {
                         첫소리,
                         가운데소리,
-                        first: false,
-                        compose,
+                        첫번째: false,
+                        조합,
                     }),
-                    Some(KeyValuePart::Jong { 끝소리 }) => Ok(Self::JungJong {
+                    Some(KeyValuePart::Jong { 끝소리 }) => Ok(Self::가운데소리끝소리 {
                         가운데소리,
                         끝소리,
-                        first: true,
-                        compose,
+                        첫번째: true,
+                        조합,
                     }),
                     None => Ok(Self::가운데소리 {
                         가운데소리,
-                        compose,
+                        조합,
                     }),
                     _ => Err(()),
                 },
                 KeyValuePart::Jong { 끝소리 } => match next() {
-                    Some(KeyValuePart::Cho { 첫소리 }) => Ok(Self::Both {
-                        첫소리,
-                        끝소리,
+                    Some(KeyValuePart::Cho { 첫소리 }) => Ok(Self::둘다 {
+                        첫소리, 끝소리
                     }),
                     Some(KeyValuePart::Jung {
                         가운데소리,
-                        compose,
-                    }) => Ok(Self::JungJong {
+                        조합,
+                    }) => Ok(Self::가운데소리끝소리 {
                         가운데소리,
                         끝소리,
-                        first: false,
-                        compose,
+                        첫번째: false,
+                        조합,
                     }),
                     None => Ok(Self::끝소리 { 끝소리 }),
                     _ => Err(()),
@@ -840,32 +840,32 @@ mod tests {
 
     #[test]
     fn test_compose_decompose() {
-        let (첫소리, 가운데소리, 끝소리) = 첫소리::decompose('앙').unwrap();
+        let (첫소리, 가운데소리, 끝소리) = 첫소리::분해('앙').unwrap();
         assert_eq!(첫소리, 첫소리::이응);
         assert_eq!(가운데소리, 가운데소리::아);
         assert_eq!(끝소리, Some(끝소리::이응));
-        assert_eq!(첫소리.compose(가운데소리, 끝소리), "앙");
+        assert_eq!(첫소리.조합(가운데소리, 끝소리), "앙");
     }
 
     #[test]
     fn test_parse_keyvalue() {
         assert_eq!(
-            "ㅇ".parse::<KeyValue>().unwrap(),
-            KeyValue::Both {
+            "ㅇ".parse::<건값>().unwrap(),
+            건값::둘다 {
                 첫소리: 첫소리::이응,
                 끝소리: 끝소리::이응
             }
         );
         assert_eq!(
-            "ㅏ".parse::<KeyValue>().unwrap(),
-            KeyValue::가운데소리 {
+            "ㅏ".parse::<건값>().unwrap(),
+            건값::가운데소리 {
                 가운데소리: 가운데소리::아,
-                compose: true
+                조합: true
             }
         );
         assert_eq!(
-            "ㅋ$ㄱ".parse::<KeyValue>().unwrap(),
-            KeyValue::Both {
+            "ㅋ$ㄱ".parse::<건값>().unwrap(),
+            건값::둘다 {
                 첫소리: 첫소리::키읔,
                 끝소리: 끝소리::기윽,
             }
@@ -892,14 +892,14 @@ mod tests {
 
     #[test]
     fn test_old_jamo_mode_combinations() {
-        let mut opts = InputOptions {
-            old_jamo_mode: false,
-            combi_on_double_stroke: true,
+        let mut opts = 입력설정 {
+            옛글자방식: false,
+            두번치기_조합: true,
             ..Default::default()
         };
         assert!(첫소리::기윽.try_add(첫소리::기윽, opts).is_some());
 
-        opts.old_jamo_mode = true;
+        opts.옛글자방식 = true;
         // Old initial combination: ᄂ + ᄒ → ᅝ
         assert_eq!(
             첫소리::니은.try_add(첫소리::히읗, opts),

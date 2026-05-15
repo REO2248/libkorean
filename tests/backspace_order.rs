@@ -1,75 +1,75 @@
-use korean::input_context::{InputContext};
+use korean::input_context::{입력문맥};
 
-fn create_ic(layout: &str) -> InputContext {
-    InputContext::new(layout).expect("valid layout")
+fn 문맥생성(layout: &str) -> 입력문맥 {
+    입력문맥::new(layout).expect("valid layout")
 }
 
 #[test]
 fn test_backspace_input_order_kps9256() {
     // Case 1: go (ㅅ + ㅐ)
-    let mut ic = create_ic("kps9256");
-    ic.process('g'); // ㅅ
-    ic.process('o'); // ㅐ
-    assert_eq!(ic.preedit_string(), "새");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.처리('g'); // ㅅ
+    문맥.처리('o'); // ㅐ
+    assert_eq!(문맥.편집문자렬(), "새");
     
     // According to user, backspacing 'o' should remove 'ㅐ' entirely, leaving 'ㅅ'
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "ㅅ");
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "ㅅ");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "");
 
     // Case 2: gjk (ㅅ + ㅏ + ㅣ)
-    let mut ic = create_ic("kps9256");
-    ic.process('g'); // ㅅ
-    ic.process('j'); // ㅏ
-    ic.process('k'); // ㅣ
-    assert_eq!(ic.preedit_string(), "새");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.처리('g'); // ㅅ
+    문맥.처리('j'); // ㅏ
+    문맥.처리('k'); // ㅣ
+    assert_eq!(문맥.편집문자렬(), "새");
     
     // Backspacing 'k' should remove 'ㅣ', leaving 'ㅅㅏ'
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "사");
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "ㅅ");
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "사");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "ㅅ");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "");
 
     // Case 3: Go (ㅆ + ㅐ) - S-G is 'ㅆ'
-    let mut ic = create_ic("kps9256");
-    ic.process('G'); // ㅆ
-    ic.process('o'); // ㅐ
-    assert_eq!(ic.preedit_string(), "쌔");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.처리('G'); // ㅆ
+    문맥.처리('o'); // ㅐ
+    assert_eq!(문맥.편집문자렬(), "쌔");
     
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "ㅆ");
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "ㅆ");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "");
 
     // Case 4: Gjk (ㅆ + ㅏ + ㅣ)
-    let mut ic = create_ic("kps9256");
-    ic.process('G'); // ㅆ
-    ic.process('j'); // ㅏ
-    ic.process('k'); // ㅣ
-    assert_eq!(ic.preedit_string(), "쌔");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.처리('G'); // ㅆ
+    문맥.처리('j'); // ㅏ
+    문맥.처리('k'); // ㅣ
+    assert_eq!(문맥.편집문자렬(), "쌔");
     
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "싸");
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "ㅆ");
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "싸");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "ㅆ");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "");
     
-    // Case 5: ggo (ㅅ + ㅅ + ㅐ) - with CombiOnDoubleStroke
-    let mut ic = create_ic("kps9256");
-    ic.set_option(korean::input_context::InputOption::CombiOnDoubleStroke, true);
-    ic.process('g'); // ㅅ
-    ic.process('g'); // ㅅ -> ㅆ
-    ic.process('o'); // ㅐ
-    assert_eq!(ic.preedit_string(), "쌔");
+    // Case 5: ggo (ㅅ + ㅅ + ㅐ) - with 두번타건조합
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.항목설정(korean::input_context::입력항목::두번타건조합, true);
+    문맥.처리('g'); // ㅅ
+    문맥.처리('g'); // ㅅ -> ㅆ
+    문맥.처리('o'); // ㅐ
+    assert_eq!(문맥.편집문자렬(), "쌔");
     
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "ㅆ");
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "ㅅ");
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "ㅆ");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "ㅅ");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "");
 }

@@ -1,60 +1,60 @@
-use korean::input_context::{InputContext, InputOption};
+use korean::input_context::{입력문맥, 입력항목};
 
-fn create_ic(layout: &str) -> InputContext {
-    InputContext::new(layout).expect("valid layout")
+fn 문맥생성(layout: &str) -> 입력문맥 {
+    입력문맥::new(layout).expect("valid layout")
 }
 
 #[test]
 fn test_multi_syllable_backspace_noble_name() {
-    let mut ic = create_ic("tubolsik");
-    ic.set_option(InputOption::존함, true);
+    let mut 문맥 = 문맥생성("tubolsik");
+    문맥.항목설정(입력항목::존함, true);
 
     // Type "김일" (R, L, A, D, L, F)
     let keys = vec!['r', 'l', 'a', 'd', 'l', 'f'];
     for k in keys {
-        ic.process(k);
+        문맥.처리(k);
     }
-    assert_eq!(ic.preedit_string(), "김일");
+    assert_eq!(문맥.편집문자렬(), "김일");
 
     // Backspace once -> "김이"
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "김이");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "김이");
 
     // Backspace again -> "김ㅇ"
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "김ㅇ");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "김ㅇ");
 
     // Backspace again -> "김"
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "김");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "김");
 
     // Backspace again -> "기"
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "기");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "기");
     
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "ㄱ");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "ㄱ");
 
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "");
 }
 
 #[test]
 fn test_multi_syllable_backspace_standard() {
-    let mut ic = create_ic("tubolsik");
+    let mut 문맥 = 문맥생성("tubolsik");
     // 존함 is false by default
 
-    ic.process('r');
-    ic.process('k');
-    ic.process('s');
-    assert_eq!(ic.preedit_string(), "간");
+    문맥.처리('r');
+    문맥.처리('k');
+    문맥.처리('s');
+    assert_eq!(문맥.편집문자렬(), "간");
     
     // Start new syllable
-    ic.process('r'); 
-    assert_eq!(ic.get_commit_string(), "간");
-    assert_eq!(ic.preedit_string(), "ㄱ");
+    문맥.처리('r'); 
+    assert_eq!(문맥.결속문자렬(), "간");
+    assert_eq!(문맥.편집문자렬(), "ㄱ");
     
     // Backspace once -> ""
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "");
 }

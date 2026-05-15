@@ -1,128 +1,128 @@
-use crate::engine::layout::Layout;
-use crate::engine::state::{CharacterResult, CharacterState};
-use crate::engine::{InputOptions, KeyValue};
+use crate::engine::layout::건반배렬;
+use crate::engine::state::{글자결과, 글자상태};
+use crate::engine::{건값, 입력설정};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum InputEvent {
-    Commit(String),
-    Preedit(String),
-    None,
+pub enum 입력사건 {
+    결속(String),
+    편집(String),
+    없음,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum OutputMode {
+pub enum 출력방식 {
     #[default]
     소리마디,
     자모,
 }
 
-pub struct InputContext {
-    state: CharacterState,
-    layout: Layout,
-    layout_id: String,
-    options: InputOptions,
-    output_mode: OutputMode,
-    commit_string: String,
-    input_buffer: String,
-    noble_history: String,
-    history: Vec<KeyValue>,
+pub struct 입력문맥 {
+    상태: 글자상태,
+    배렬: 건반배렬,
+    배렬식별자: String,
+    설정: 입력설정,
+    출력방식: 출력방식,
+    결속문자렬: String,
+    입력완충: String,
+    존함기록: String,
+    기록: Vec<건값>,
 }
 
-impl InputContext {
-    const SYLLABLE_BREAK_MARKER: char = '🄵';
+impl 입력문맥 {
+    const 소리바디분리표식자: char = '🄵';
 
-    pub fn new(layout_id: &str) -> Result<Self, LayoutError> {
-        let layout = Layout::new(layout_id)?;
-        let mut options = InputOptions::default();
+    pub fn new(배렬식별자: &str) -> Result<Self, 건반배렬에러> {
+        let 배렬 = 건반배렬::new(배렬식별자)?;
+        let mut 설정 = 입력설정::default();
 
-        let is_trans = layout.has_multi_char_keys();
+        let is_trans = 배렬.다중문자건이_있는가();
 
         if is_trans {
-            options.treat_final_as_initial = true;
-            options.auto_reorder = false;
-            options.non_initial_combi = false;
-            options.medial_combi = false;
+            설정.끝소리를_첫소리로_처리 = true;
+            설정.자동재배치 = false;
+            설정.첫소리밖조합 = false;
+            설정.가운데소리조합 = false;
         } else {
-            options.non_initial_combi = true;
+            설정.첫소리밖조합 = true;
         }
 
-        if layout.has_old_jamo() {
-            options.old_jamo_mode = true;
+        if 배렬.옛글자가_있는가() {
+            설정.옛글자방식 = true;
         }
         Ok(Self {
-            state: CharacterState::new(),
-            layout,
-            layout_id: layout_id.to_string(),
-            options,
-            output_mode: OutputMode::소리마디,
-            commit_string: String::new(),
-            input_buffer: String::new(),
-            noble_history: String::new(),
-            history: Vec::new(),
+            상태: 글자상태::new(),
+            배렬,
+            배렬식별자: 배렬식별자.to_string(),
+            설정,
+            출력방식: 출력방식::소리마디,
+            결속문자렬: String::new(),
+            입력완충: String::new(),
+            존함기록: String::new(),
+            기록: Vec::new(),
         })
     }
 
-    pub fn set_option(&mut self, option: InputOption, value: bool) {
+    pub fn 항목설정(&mut self, option: 입력항목, value: bool) {
         match option {
-            InputOption::AutoReorder => self.options.auto_reorder = value,
-            InputOption::CombiOnDoubleStroke => self.options.combi_on_double_stroke = value,
-            InputOption::NonChoseongCombi => self.options.non_initial_combi = value,
-            InputOption::OldJamo => self.options.old_jamo_mode = value,
-            InputOption::존함 => {
-                if self.options.존함 && !value {
-                    self.flush_noble_name();
+            입력항목::자동재배치 => self.설정.자동재배치 = value,
+            입력항목::두번타건조합 => self.설정.두번치기_조합 = value,
+            입력항목::첫소리밖조합 => self.설정.첫소리밖조합 = value,
+            입력항목::옛글자방식 => self.설정.옛글자방식 = value,
+            입력항목::존함 => {
+                if self.설정.존함 && !value {
+                    self.존함비우기();
                 }
-                self.options.존함 = value;
+                self.설정.존함 = value;
             }
-            InputOption::WordUnitCommit => self.options.word_unit_commit = value,
+            입력항목::단어단위확적 => self.설정.단어단위확정 = value,
         }
     }
 
-    pub const fn get_option(&self, option: InputOption) -> bool {
+    pub const fn 항목획득(&self, option: 입력항목) -> bool {
         match option {
-            InputOption::AutoReorder => self.options.auto_reorder,
-            InputOption::CombiOnDoubleStroke => self.options.combi_on_double_stroke,
-            InputOption::NonChoseongCombi => self.options.non_initial_combi,
-            InputOption::OldJamo => self.options.old_jamo_mode,
-            InputOption::존함 => self.options.존함,
-            InputOption::WordUnitCommit => self.options.word_unit_commit,
+            입력항목::자동재배치 => self.설정.자동재배치,
+            입력항목::두번타건조합 => self.설정.두번치기_조합,
+            입력항목::첫소리밖조합 => self.설정.첫소리밖조합,
+            입력항목::옛글자방식 => self.설정.옛글자방식,
+            입력항목::존함 => self.설정.존함,
+            입력항목::단어단위확적 => self.설정.단어단위확정,
         }
     }
 
-    pub const fn set_output_mode(&mut self, mode: OutputMode) {
-        self.output_mode = mode;
+    pub const fn 출력방식_설정(&mut self, mode: 출력방식) {
+        self.출력방식 = mode;
     }
 
-    pub fn process(&mut self, key: char) -> bool {
-        self.commit_string.clear();
-        self.handle_transliteration_preprocess(key);
+    pub fn 처리(&mut self, key: char) -> bool {
+        self.결속문자렬.clear();
+        self.전사전처리(key);
 
-        self.input_buffer.push(key);
-        self.process_buffer(false)
+        self.입력완충.push(key);
+        self.완충처리(false)
     }
 
-    fn handle_transliteration_preprocess(&mut self, key: char) {
-        if !self.is_transliteration() || !key.is_ascii_uppercase() {
+    fn 전사전처리(&mut self, key: char) {
+        if !self.전사방식인가() || !key.is_ascii_uppercase() {
             return;
         }
-        self.process_buffer(true);
-        self.flush_to_commit();
+        self.완충처리(true);
+        self.결속으로비우기();
     }
 
-    fn process_buffer(&mut self, force: bool) -> bool {
-        while !self.input_buffer.is_empty() {
+    fn 완충처리(&mut self, force: bool) -> bool {
+        while !self.입력완충.is_empty() {
             let mut match_len = 0;
             let mut matched_kv = None;
 
-            let mut ends: Vec<usize> = self.input_buffer.char_indices().map(|(i, _)| i).collect();
-            ends.push(self.input_buffer.len());
+            let mut ends: Vec<usize> = self.입력완충.char_indices().map(|(i, _)| i).collect();
+            ends.push(self.입력완충.len());
 
             for end in ends.into_iter().rev() {
                 if end == 0 {
                     continue;
                 }
-                let sub = &self.input_buffer[..end];
-                if let Some(kv) = self.layout.lookup(sub, self.is_transliteration()) {
+                let sub = &self.입력완충[..end];
+                if let Some(kv) = self.배렬.찾기(sub, self.전사방식인가()) {
                     matched_kv = Some(kv);
                     match_len = end;
                     break;
@@ -132,112 +132,112 @@ impl InputContext {
             if let Some(kv) = matched_kv {
                 if !force
                     && self
-                        .layout
-                        .is_prefix(&self.input_buffer, self.is_transliteration())
+                        .배렬
+                        .앞붙이인가(&self.입력완충, self.전사방식인가())
                 {
                     return true;
                 }
 
-                self.process_kv(kv);
-                self.input_buffer.drain(..match_len);
+                self.건값처리(kv);
+                self.입력완충.drain(..match_len);
             } else {
                 if !force
                     && self
-                        .layout
-                        .is_prefix(&self.input_buffer, self.is_transliteration())
+                        .배렬
+                        .앞붙이인가(&self.입력완충, self.전사방식인가())
                 {
                     return true;
                 }
-                let first_char = self.input_buffer.chars().next().unwrap();
-                self.flush_to_commit();
-                self.commit_string.push(first_char);
+                let first_char = self.입력완충.chars().next().unwrap();
+                self.결속으로비우기();
+                self.결속문자렬.push(first_char);
                 let len = first_char.len_utf8();
-                self.input_buffer.drain(..len);
+                self.입력완충.drain(..len);
             }
         }
         true
     }
 
-    fn process_kv(&mut self, kv: KeyValue) {
-        self.history.push(kv);
-        self.rebuild();
+    fn 건값처리(&mut self, kv: 건값) {
+        self.기록.push(kv);
+        self.다시만들기();
     }
 
-    fn rebuild(&mut self) {
-        let keys = std::mem::take(&mut self.history);
-        self.state.reset();
-        self.noble_history.clear();
+    fn 다시만들기(&mut self) {
+        let keys = std::mem::take(&mut self.기록);
+        self.상태.초기화();
+        self.존함기록.clear();
         for mut kv in keys {
-            if self.is_transliteration() {
+            if self.전사방식인가() {
                 kv = self.apply_transliteration_rules(kv);
             }
-            if let KeyValue::Pass(ch) = kv {
-                self.flush_to_commit();
-                if ch != Self::SYLLABLE_BREAK_MARKER {
-                    self.commit_string.push(ch);
+            if let 건값::통과(ch) = kv {
+                self.결속으로비우기();
+                if ch != Self::소리바디분리표식자 {
+                    self.결속문자렬.push(ch);
                 }
                 continue;
             }
-            match self.state.key(kv, self.options) {
-                CharacterResult::Consume => self.history.push(kv),
-                CharacterResult::NewCharacter(mut next) => {
-                    if self.is_transliteration() && !next.has_initial() && next.has_medial() {
-                        let mut final_next = CharacterState::new();
+            match self.상태.key(kv, self.설정) {
+                글자결과::소모 => self.기록.push(kv),
+                글자결과::새글자(mut next) => {
+                    if self.전사방식인가() && !next.첫소리있는가() && next.가운데소리있는가() {
+                        let mut final_next = 글자상태::new();
                         final_next.key(
-                            KeyValue::첫소리 {
+                            건값::첫소리 {
                                 첫소리: crate::engine::첫소리::이응,
                             },
-                            self.options,
+                            self.설정,
                         );
-                        for k in next.history() {
-                            final_next.key(*k, self.options);
+                        for k in next.기록() {
+                            final_next.key(*k, self.설정);
                         }
                         next = final_next;
                     }
                     self.commit_syllable();
-                    self.state = next;
-                    if self.history.is_empty() {
-                        self.history.extend(self.state.history());
+                    self.상태 = next;
+                    if self.기록.is_empty() {
+                        self.기록.extend(self.상태.기록());
                     } else {
-                        self.history.push(kv);
+                        self.기록.push(kv);
                     }
                 }
             }
         }
     }
 
-    fn apply_transliteration_rules(&mut self, mut kv: KeyValue) -> KeyValue {
+    fn apply_transliteration_rules(&mut self, mut kv: 건값) -> 건값 {
         let is_consonant = matches!(
             kv,
-            KeyValue::첫소리 { .. } | KeyValue::Both { .. } | KeyValue::끝소리 { .. }
+            건값::첫소리 { .. } | 건값::둘다 { .. } | 건값::끝소리 { .. }
         );
-        if is_consonant && self.state.has_initial() && !self.state.has_medial() {
-            self.state.key(
-                KeyValue::가운데소리 {
+        if is_consonant && self.상태.첫소리있는가() && !self.상태.가운데소리있는가() {
+            self.상태.key(
+                건값::가운데소리 {
                     가운데소리: crate::engine::가운데소리::으,
-                    compose: true,
+                    조합: true,
                 },
-                self.options,
+                self.설정,
             );
             self.commit_syllable();
         }
 
-        if let KeyValue::가운데소리 { .. } = kv {
-            if !self.state.has_initial() && !self.state.has_medial() && !self.state.has_final() {
-                self.state.key(
-                    KeyValue::첫소리 {
+        if let 건값::가운데소리 { .. } = kv {
+            if !self.상태.첫소리있는가() && !self.상태.가운데소리있는가() && !self.상태.끝소리있는가() {
+                self.상태.key(
+                    건값::첫소리 {
                         첫소리: crate::engine::첫소리::이응,
                     },
-                    self.options,
+                    self.설정,
                 );
             }
         }
 
-        if let KeyValue::끝소리 { 끝소리 } = kv {
-            if !self.state.has_initial() && !self.state.has_medial() && !self.state.has_final() {
-                if let crate::engine::끝소리To첫소리::Direct(next_cho) = 끝소리.to_initial()
+        if let 건값::끝소리 { 끝소리 } = kv {
+            if !self.상태.첫소리있는가() && !self.상태.가운데소리있는가() && !self.상태.끝소리있는가() {
+                if let crate::engine::끝소리To첫소리::Direct(next_cho) = 끝소리.첫소리로()
                 {
-                    kv = KeyValue::첫소리 {
+                    kv = 건값::첫소리 {
                         첫소리: next_cho
                     };
                 }
@@ -246,74 +246,74 @@ impl InputContext {
         kv
     }
 
-    pub fn backspace(&mut self) -> InputEvent {
-        self.commit_string.clear();
-        if !self.input_buffer.is_empty() {
-            self.input_buffer.pop();
-            return InputEvent::Preedit(self.preedit_string());
+    pub fn 지우기(&mut self) -> 입력사건 {
+        self.결속문자렬.clear();
+        if !self.입력완충.is_empty() {
+            self.입력완충.pop();
+            return 입력사건::편집(self.편집문자렬());
         }
 
-        if self.history.is_empty() {
-            return InputEvent::None;
+        if self.기록.is_empty() {
+            return 입력사건::없음;
         }
 
-        self.history.pop();
-        self.rebuild();
+        self.기록.pop();
+        self.다시만들기();
 
-        InputEvent::Preedit(self.preedit_string())
+        입력사건::편집(self.편집문자렬())
     }
 
-    pub fn flush(&mut self) -> String {
-        self.process_buffer(true);
-        self.commit_string.clear();
-        self.flush_to_commit();
-        let out = self.commit_string.clone();
-        self.commit_string.clear();
+    pub fn 비우기(&mut self) -> String {
+        self.완충처리(true);
+        self.결속문자렬.clear();
+        self.결속으로비우기();
+        let out = self.결속문자렬.clone();
+        self.결속문자렬.clear();
         out
     }
 
-    pub fn reset(&mut self) {
-        self.state.reset();
-        self.input_buffer.clear();
-        self.commit_string.clear();
-        self.noble_history.clear();
-        self.history.clear();
+    pub fn 초기화(&mut self) {
+        self.상태.초기화();
+        self.입력완충.clear();
+        self.결속문자렬.clear();
+        self.존함기록.clear();
+        self.기록.clear();
     }
 
     pub const fn is_empty(&self) -> bool {
-        !self.state.need_display() && self.noble_history.is_empty()
+        !self.상태.현시필요() && self.존함기록.is_empty()
     }
-    pub const fn has_initial(&self) -> bool {
-        self.state.has_initial()
+    pub const fn 첫소리있는가(&self) -> bool {
+        self.상태.첫소리있는가()
     }
-    pub const fn has_medial(&self) -> bool {
-        self.state.has_medial()
+    pub const fn 가운데소리있는가(&self) -> bool {
+        self.상태.가운데소리있는가()
     }
-    pub const fn has_final(&self) -> bool {
-        self.state.has_final()
-    }
-
-    pub fn layout_id(&self) -> &str {
-        &self.layout_id
+    pub const fn 끝소리있는가(&self) -> bool {
+        self.상태.끝소리있는가()
     }
 
-    pub fn is_transliteration(&self) -> bool {
-        self.layout.has_multi_char_keys()
+    pub fn 배렬식별자(&self) -> &str {
+        &self.배렬식별자
     }
 
-    pub fn preedit_string(&self) -> String {
+    pub fn 전사방식인가(&self) -> bool {
+        self.배렬.다중문자건이_있는가()
+    }
+
+    pub fn 편집문자렬(&self) -> String {
         let mut out = String::new();
-        let history = self.noble_history.clone();
+        let 기록 = self.존함기록.clone();
 
-        match self.output_mode {
-            OutputMode::소리마디 => self.state.preedit(&mut out),
-            OutputMode::자모 => self.state.jamo(&mut out),
+        match self.출력방식 {
+            출력방식::소리마디 => self.상태.preedit(&mut out),
+            출력방식::자모 => self.상태.자모(&mut out),
         }
 
-        let mut combined = history.clone();
+        let mut combined = 기록.clone();
         combined.push_str(&out);
 
-        if self.options.존함 {
+        if self.설정.존함 {
             if combined.contains("김일성") {
                 combined = combined.replace("김일성", "\u{F113}\u{F114}\u{F115}");
                 return combined;
@@ -326,178 +326,175 @@ impl InputContext {
             }
         }
 
-        let mut final_out = history;
+        let mut final_out = 기록;
         final_out.push_str(&out);
         let mut out = final_out;
 
-        if !self.input_buffer.is_empty() {
+        if !self.입력완충.is_empty() {
             if let Some(mut kv) = self
-                .layout
-                .lookup(&self.input_buffer, self.is_transliteration())
+                .배렬
+                .찾기(&self.입력완충, self.전사방식인가())
             {
-                let mut temp_state = self.state.clone();
-                if self.is_transliteration()
-                    && !temp_state.has_initial()
-                    && !temp_state.has_medial()
-                    && !temp_state.has_final()
+                let mut temp_state = self.상태.clone();
+                if self.전사방식인가()
+                    && !temp_state.첫소리있는가()
+                    && !temp_state.가운데소리있는가()
+                    && !temp_state.끝소리있는가()
                 {
-                    if let KeyValue::가운데소리 { .. } = kv {
+                    if let 건값::가운데소리 { .. } = kv {
                         temp_state.key(
-                            KeyValue::첫소리 {
+                            건값::첫소리 {
                                 첫소리: crate::engine::첫소리::이응,
                             },
-                            self.options,
+                            self.설정,
                         );
-                    } else if let KeyValue::끝소리 { 끝소리 } = kv {
-                        if let crate::engine::끝소리To첫소리::Direct(next_cho) = 끝소리.to_initial()
+                    } else if let 건값::끝소리 { 끝소리 } = kv {
+                        if let crate::engine::끝소리To첫소리::Direct(next_cho) = 끝소리.첫소리로()
                         {
-                            kv = KeyValue::첫소리 {
+                            kv = 건값::첫소리 {
                                 첫소리: next_cho
                             };
                         }
                     }
                 }
-                match temp_state.key(kv, self.options) {
-                    CharacterResult::Consume => {
+                match temp_state.key(kv, self.설정) {
+                    글자결과::소모 => {
                         out.clear();
-                        match self.output_mode {
-                            OutputMode::소리마디 => temp_state.preedit(&mut out),
-                            OutputMode::자모 => temp_state.jamo(&mut out),
+                        match self.출력방식 {
+                            출력방식::소리마디 => temp_state.preedit(&mut out),
+                            출력방식::자모 => temp_state.자모(&mut out),
                         }
                     }
-                    CharacterResult::NewCharacter(mut next) => {
+                    글자결과::새글자(mut next) => {
                         out.clear();
-                        if self.is_transliteration() && !next.has_initial() && next.has_medial() {
-                            let mut final_next = CharacterState::new();
+                        if self.전사방식인가() && !next.첫소리있는가() && next.가운데소리있는가() {
+                            let mut final_next = 글자상태::new();
                             final_next.key(
-                                KeyValue::첫소리 {
+                                건값::첫소리 {
                                     첫소리: crate::engine::첫소리::이응,
                                 },
-                                self.options,
+                                self.설정,
                             );
-                            for kv in next.history() {
-                                final_next.key(*kv, self.options);
+                            for kv in next.기록() {
+                                final_next.key(*kv, self.설정);
                             }
                             next = final_next;
                         }
-                        match self.output_mode {
-                            OutputMode::소리마디 => {
+                        match self.출력방식 {
+                            출력방식::소리마디 => {
                                 temp_state.preedit(&mut out);
                                 next.preedit(&mut out);
                             }
-                            OutputMode::자모 => {
-                                temp_state.jamo(&mut out);
-                                next.jamo(&mut out);
+                            출력방식::자모 => {
+                                temp_state.자모(&mut out);
+                                next.자모(&mut out);
                             }
                         }
                     }
                 }
             } else {
-                out.push_str(&self.input_buffer);
+                out.push_str(&self.입력완충);
             }
         }
         out
     }
 
-    pub fn get_commit_string(&self) -> &str {
-        &self.commit_string
+    pub fn 결속문자렬(&self) -> &str {
+        &self.결속문자렬
     }
 
-    pub fn clear_commit_string(&mut self) {
-        self.commit_string.clear();
+    pub fn 결속문자렬_비우기(&mut self) {
+        self.결속문자렬.clear();
     }
 
-    fn flush_to_commit(&mut self) {
-        match self.output_mode {
-            OutputMode::소리마디 => {
+    fn 결속으로비우기(&mut self) {
+        match self.출력방식 {
+            출력방식::소리마디 => {
                 self.commit_syllable();
-                self.flush_noble_name();
+                self.존함비우기();
             }
-            OutputMode::자모 => {
-                self.state.jamo(&mut self.commit_string);
-                self.state.reset();
-                self.noble_history.clear();
+            출력방식::자모 => {
+                self.상태.자모(&mut self.결속문자렬);
+                self.상태.초기화();
+                self.존함기록.clear();
             }
         }
     }
 
     fn commit_syllable(&mut self) {
         let mut syl = String::new();
-        self.state.commit(&mut syl);
+        self.상태.commit(&mut syl);
         if syl.is_empty() {
             return;
         }
 
-        if !self.options.존함 && !self.options.word_unit_commit {
-            self.commit_string.push_str(&syl);
-            self.history.clear();
+        if !self.설정.존함 && !self.설정.단어단위확정 {
+            self.결속문자렬.push_str(&syl);
+            self.기록.clear();
             return;
         }
 
-        self.noble_history.push_str(&syl);
-        if self.options.word_unit_commit {
+        self.존함기록.push_str(&syl);
+        if self.설정.단어단위확정 {
             return;
         }
 
         let mut replaced = false;
-        if self.noble_history.ends_with("김일성") {
-            self.noble_history
-                .truncate(self.noble_history.len() - "김일성".len());
-            self.flush_noble_name();
-            self.commit_string.push_str("\u{F113}\u{F114}\u{F115}");
+        if self.존함기록.ends_with("김일성") {
+            self.존함기록.truncate(self.존함기록.len() - "김일성".len());
+            self.존함비우기();
+            self.결속문자렬.push_str("\u{F113}\u{F114}\u{F115}");
             replaced = true;
-        } else if self.noble_history.ends_with("김정일") {
-            self.noble_history
-                .truncate(self.noble_history.len() - "김정일".len());
-            self.flush_noble_name();
-            self.commit_string.push_str("\u{F116}\u{F117}\u{F118}");
+        } else if self.존함기록.ends_with("김정일") {
+            self.존함기록.truncate(self.존함기록.len() - "김정일".len());
+            self.존함비우기();
+            self.결속문자렬.push_str("\u{F116}\u{F117}\u{F118}");
             replaced = true;
-        } else if self.noble_history.ends_with("김정은") {
-            self.noble_history
-                .truncate(self.noble_history.len() - "김정은".len());
-            self.flush_noble_name();
-            self.commit_string.push_str("\u{F120}\u{F121}\u{F122}");
+        } else if self.존함기록.ends_with("김정은") {
+            self.존함기록.truncate(self.존함기록.len() - "김정은".len());
+            self.존함비우기();
+            self.결속문자렬.push_str("\u{F120}\u{F121}\u{F122}");
             replaced = true;
         }
 
         if replaced {
-            self.noble_history.clear();
+            self.존함기록.clear();
         } else {
-            let h = &self.noble_history;
+            let h = &self.존함기록;
             if h != "김" && h != "김일" && h != "김정" {
-                self.flush_noble_name();
+                self.존함비우기();
             }
         }
     }
 
-    fn flush_noble_name(&mut self) {
-        self.commit_string.push_str(&self.noble_history);
-        self.noble_history.clear();
-        self.history.clear();
+    fn 존함비우기(&mut self) {
+        self.결속문자렬.push_str(&self.존함기록);
+        self.존함기록.clear();
+        self.기록.clear();
     }
 }
 
 #[derive(Clone, Copy, Debug)]
-pub enum InputOption {
-    AutoReorder,
-    CombiOnDoubleStroke,
-    NonChoseongCombi,
-    OldJamo,
+pub enum 입력항목 {
+    자동재배치,
+    두번타건조합,
+    첫소리밖조합,
+    옛글자방식,
     존함,
-    WordUnitCommit,
+    단어단위확적,
 }
 
 #[derive(Debug)]
-pub enum LayoutError {
-    Unknown(String),
+pub enum 건반배렬에러 {
+    알수없음(String),
 }
 
-impl std::fmt::Display for LayoutError {
+impl std::fmt::Display for 건반배렬에러 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Unknown(id) => write!(f, "unknown layout: {id}"),
+            Self::알수없음(id) => write!(f, "unknown 배렬: {id}"),
         }
     }
 }
 
-impl std::error::Error for LayoutError {}
+impl std::error::Error for 건반배렬에러 {}

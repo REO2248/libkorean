@@ -1,13 +1,13 @@
 //! Comprehensive integration tests
 
 use korean::char_utils::{
-    is_cjamo, 가운데소리인가, 끝소리인가, 소리마디를_첫소리로_변환, 소리마디인가,
+    호환자모인가, 가운데소리인가, 끝소리인가, 소리마디를_첫소리로_변환, 소리마디인가,
     첫소리를_호환첫소리로_변환, 첫소리인가,
 };
-use korean::input_context::{InputContext, InputEvent, InputOption};
+use korean::input_context::{입력문맥, 입력사건, 입력항목};
 
-fn create_ic(layout: &str) -> InputContext {
-    InputContext::new(layout).expect("valid layout")
+fn 문맥생성(layout: &str) -> 입력문맥 {
+    입력문맥::new(layout).expect("valid layout")
 }
 
 // ============================================================================
@@ -16,93 +16,93 @@ fn create_ic(layout: &str) -> InputContext {
 
 #[test]
 fn test_korean_ic_process_2() {
-    let mut ic = create_ic("kps9256");
-    ic.process('s');
-    ic.process('j');
-    ic.process('A');
-    assert_eq!(ic.get_commit_string(), "가");
-    assert_eq!(ic.preedit_string(), "ㅉ");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.처리('s');
+    문맥.처리('j');
+    문맥.처리('A');
+    assert_eq!(문맥.결속문자렬(), "가");
+    assert_eq!(문맥.편집문자렬(), "ㅉ");
 
-    let mut ic = create_ic("kps9256");
-    ic.process('q');
-    ic.process('i');
-    ic.process('G');
-    ic.process('l');
-    assert_eq!(ic.get_commit_string(), "버");
-    assert_eq!(ic.preedit_string(), "쓰");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.처리('q');
+    문맥.처리('i');
+    문맥.처리('G');
+    문맥.처리('l');
+    assert_eq!(문맥.결속문자렬(), "버");
+    assert_eq!(문맥.편집문자렬(), "쓰");
 
-    let mut ic = create_ic("kps9256");
-    ic.process('w');
-    ic.process('j');
-    ic.process('r');
-    ic.process('s');
-    assert_eq!(ic.preedit_string(), "맑");
-    ic.process('h');
-    assert_eq!(ic.get_commit_string(), "말");
-    assert_eq!(ic.preedit_string(), "고");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.처리('w');
+    문맥.처리('j');
+    문맥.처리('r');
+    문맥.처리('s');
+    assert_eq!(문맥.편집문자렬(), "맑");
+    문맥.처리('h');
+    assert_eq!(문맥.결속문자렬(), "말");
+    assert_eq!(문맥.편집문자렬(), "고");
 
-    let mut ic = create_ic("kps9256");
-    ic.process('s');
-    ic.process('g');
-    assert_eq!(ic.preedit_string(), "ㄳ");
-    ic.process('j');
-    assert_eq!(ic.get_commit_string(), "ㄱ");
-    assert_eq!(ic.preedit_string(), "사");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.처리('s');
+    문맥.처리('g');
+    assert_eq!(문맥.편집문자렬(), "ㄳ");
+    문맥.처리('j');
+    assert_eq!(문맥.결속문자렬(), "ㄱ");
+    assert_eq!(문맥.편집문자렬(), "사");
 
-    let mut ic = create_ic("kps9256");
-    ic.process('s');
-    ic.process('j');
-    ic.process('G');
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "가");
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "ㄱ");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.처리('s');
+    문맥.처리('j');
+    문맥.처리('G');
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "가");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "ㄱ");
 
-    let mut ic = create_ic("kps9256");
-    ic.process('s');
-    ic.process('g');
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "ㄱ");
-    ic.process('j');
-    assert_eq!(ic.preedit_string(), "가");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.처리('s');
+    문맥.처리('g');
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "ㄱ");
+    문맥.처리('j');
+    assert_eq!(문맥.편집문자렬(), "가");
 
-    let mut ic = create_ic("kps9256");
-    ic.process('w');
-    ic.process('j');
-    ic.process('r');
-    ic.process('s');
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "말");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.처리('w');
+    문맥.처리('j');
+    문맥.처리('r');
+    문맥.처리('s');
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "말");
 
-    let mut ic = create_ic("kps9256");
-    ic.process('d');
-    ic.process('u');
-    ic.process('p');
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "우");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.처리('d');
+    문맥.처리('u');
+    문맥.처리('p');
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "우");
 
-    let mut ic = create_ic("kps9256");
-    ic.process('q');
-    ic.process('q');
-    ic.process('u');
-    ic.process('p');
-    ic.process('r');
-    ic.process('s');
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.처리('q');
+    문맥.처리('q');
+    문맥.처리('u');
+    문맥.처리('p');
+    문맥.처리('r');
+    문맥.처리('s');
     for _ in 0..6 {
-        ic.backspace();
+        문맥.지우기();
     }
-    assert_eq!(ic.preedit_string(), "");
+    assert_eq!(문맥.편집문자렬(), "");
 
-    let mut ic = create_ic("kps9256");
-    ic.process('Q');
-    ic.process('u');
-    ic.process('p');
-    ic.process('r');
-    ic.process('s');
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.처리('Q');
+    문맥.처리('u');
+    문맥.처리('p');
+    문맥.처리('r');
+    문맥.처리('s');
     for _ in 0..5 {
-        ic.backspace();
+        문맥.지우기();
     }
-    assert_eq!(ic.preedit_string(), "");
+    assert_eq!(문맥.편집문자렬(), "");
 }
 
 // ============================================================================
@@ -111,91 +111,91 @@ fn test_korean_ic_process_2() {
 
 #[test]
 fn test_korean_ic_process_romaja() {
-    let mut ic = create_ic("romaja");
-    ic.process('h');
-    ic.process('a');
-    ic.process('n');
-    assert_eq!(ic.preedit_string(), "한");
-    ic.reset();
+    let mut 문맥 = 문맥생성("romaja");
+    문맥.처리('h');
+    문맥.처리('a');
+    문맥.처리('n');
+    assert_eq!(문맥.편집문자렬(), "한");
+    문맥.초기화();
 
-    ic.process('a');
-    assert_eq!(ic.preedit_string(), "아");
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "");
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "");
+    문맥.처리('a');
+    assert_eq!(문맥.편집문자렬(), "아");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "");
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "");
 
-    ic.reset();
-    ic.process('t');
-    ic.process('t');
-    assert_eq!(ic.preedit_string(), "ㄸ");
+    문맥.초기화();
+    문맥.처리('t');
+    문맥.처리('t');
+    assert_eq!(문맥.편집문자렬(), "ㄸ");
 
-    ic.reset();
-    ic.process('x');
-    ic.process('x');
-    assert_eq!(ic.get_commit_string(), "으");
-    assert_eq!(ic.preedit_string(), "ㅇ");
+    문맥.초기화();
+    문맥.처리('x');
+    문맥.처리('x');
+    assert_eq!(문맥.결속문자렬(), "으");
+    assert_eq!(문맥.편집문자렬(), "ㅇ");
 
-    ic.reset();
-    ic.process('X');
-    ic.process('y');
-    assert_eq!(ic.preedit_string(), "지");
+    문맥.초기화();
+    문맥.처리('X');
+    문맥.처리('y');
+    assert_eq!(문맥.편집문자렬(), "지");
 
-    ic.reset();
-    ic.process('n');
-    assert_eq!(ic.preedit_string(), "ㄴ");
-    assert_eq!(ic.get_commit_string(), "");
-    let flushed = ic.flush();
+    문맥.초기화();
+    문맥.처리('n');
+    assert_eq!(문맥.편집문자렬(), "ㄴ");
+    assert_eq!(문맥.결속문자렬(), "");
+    let flushed = 문맥.비우기();
     assert_eq!(flushed, "ㄴ");
-    assert_eq!(ic.preedit_string(), "");
+    assert_eq!(문맥.편집문자렬(), "");
 }
 
 #[test]
 fn test_korean_ic_flush() {
-    let mut ic = InputContext::new("romaja").unwrap();
-    ic.process('a');
-    assert_eq!(ic.preedit_string(), "아");
-    let flushed = ic.flush();
+    let mut 문맥 = 입력문맥::new("romaja").unwrap();
+    문맥.처리('a');
+    assert_eq!(문맥.편집문자렬(), "아");
+    let flushed = 문맥.비우기();
     assert_eq!(flushed, "아");
-    assert_eq!(ic.preedit_string(), "");
+    assert_eq!(문맥.편집문자렬(), "");
 
-    ic.process('n');
-    assert_eq!(ic.preedit_string(), "ㄴ");
-    let flushed = ic.flush();
+    문맥.처리('n');
+    assert_eq!(문맥.편집문자렬(), "ㄴ");
+    let flushed = 문맥.비우기();
     assert_eq!(flushed, "ㄴ");
 }
 
 #[test]
 fn test_korean_ic_romaja_annyong() {
-    let mut ic = create_ic("romaja");
-    ic.reset();
+    let mut 문맥 = 문맥생성("romaja");
+    문맥.초기화();
     let mut result = String::new();
     for c in "annyeonghasibnikka".chars() {
-        ic.process(c);
-        result.push_str(ic.get_commit_string());
-        ic.clear_commit_string();
+        문맥.처리(c);
+        result.push_str(문맥.결속문자렬());
+        문맥.결속문자렬_비우기();
     }
-    result.push_str(&ic.preedit_string());
+    result.push_str(&문맥.편집문자렬());
     assert_eq!(result, "안녕하십니까");
 }
 
 #[test]
 fn test_korean_ic_romaja_phonetic() {
-    let mut ic = create_ic("romaja");
-    ic.reset();
+    let mut 문맥 = 문맥생성("romaja");
+    문맥.초기화();
     let mut result = String::new();
     for c in "proGram".chars() {
-        ic.process(c);
-        result.push_str(ic.get_commit_string());
-        ic.clear_commit_string();
+        문맥.처리(c);
+        result.push_str(문맥.결속문자렬());
+        문맥.결속문자렬_비우기();
     }
-    result.push_str(&ic.preedit_string());
+    result.push_str(&문맥.편집문자렬());
     assert_eq!(result, "프로그람");
 }
 
 #[test]
 fn test_korean_ic_romaja_double_consonants() {
-    let mut ic = create_ic("romaja");
+    let mut 문맥 = 문맥생성("romaja");
     let cases = [
         ("kk", "ㄲ"),
         ("gg", "ㄲ"),
@@ -217,48 +217,48 @@ fn test_korean_ic_romaja_double_consonants() {
         ("zza", "짜"),
     ];
     for (input, expected) in cases {
-        ic.reset();
+        문맥.초기화();
         for c in input.chars() {
-            ic.process(c);
+            문맥.처리(c);
         }
-        assert_eq!(ic.preedit_string(), expected, "Failed for input: {}", input);
+        assert_eq!(문맥.편집문자렬(), expected, "Failed for input: {}", input);
     }
 }
 
 #[test]
 fn test_korean_ic_romaja_vowel_combinations() {
-    let mut ic = create_ic("romaja");
+    let mut 문맥 = 문맥생성("romaja");
     let input = "eobeoi";
     let mut result = String::new();
     for c in input.chars() {
-        ic.process(c);
-        result.push_str(ic.get_commit_string());
-        ic.clear_commit_string();
+        문맥.처리(c);
+        result.push_str(문맥.결속문자렬());
+        문맥.결속문자렬_비우기();
     }
-    result.push_str(&ic.preedit_string());
+    result.push_str(&문맥.편집문자렬());
     assert_eq!(result, "어버이");
 }
 
 #[test]
 fn test_korean_ic_romaja_uppercase_break() {
-    let mut ic = create_ic("romaja");
+    let mut 문맥 = 문맥생성("romaja");
 
-    ic.reset();
+    문맥.초기화();
     let mut result = String::new();
     for ch in "anA".chars() {
-        ic.process(ch);
-        result.push_str(ic.get_commit_string());
+        문맥.처리(ch);
+        result.push_str(문맥.결속문자렬());
     }
-    result.push_str(&ic.preedit_string());
+    result.push_str(&문맥.편집문자렬());
     assert_eq!(result, "안아");
 
-    ic.reset();
+    문맥.초기화();
     result.clear();
     for ch in "GeosEun".chars() {
-        ic.process(ch);
-        result.push_str(ic.get_commit_string());
+        문맥.처리(ch);
+        result.push_str(문맥.결속문자렬());
     }
-    result.push_str(&ic.preedit_string());
+    result.push_str(&문맥.편집문자렬());
     assert_eq!(result, "것은");
 }
 
@@ -268,30 +268,30 @@ fn test_korean_ic_romaja_uppercase_break() {
 
 #[test]
 fn test_korean_ic_auto_reorder() {
-    let mut ic = create_ic("kps9256");
-    ic.set_option(InputOption::AutoReorder, true);
-    ic.process('s');
-    ic.process('j');
-    assert_eq!(ic.preedit_string(), "가");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.항목설정(입력항목::자동재배치, true);
+    문맥.처리('s');
+    문맥.처리('j');
+    assert_eq!(문맥.편집문자렬(), "가");
 
-    let mut ic = create_ic("kps9256");
-    ic.set_option(InputOption::AutoReorder, true);
-    ic.process('j');
-    ic.process('s');
-    assert_eq!(ic.preedit_string(), "가");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.항목설정(입력항목::자동재배치, true);
+    문맥.처리('j');
+    문맥.처리('s');
+    assert_eq!(문맥.편집문자렬(), "가");
 
-    let mut ic = create_ic("kps9256");
-    ic.set_option(InputOption::AutoReorder, false);
-    ic.process('s');
-    ic.process('j');
-    assert_eq!(ic.preedit_string(), "가");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.항목설정(입력항목::자동재배치, false);
+    문맥.처리('s');
+    문맥.처리('j');
+    assert_eq!(문맥.편집문자렬(), "가");
 
-    let mut ic = create_ic("kps9256");
-    ic.set_option(InputOption::AutoReorder, false);
-    ic.process('j');
-    ic.process('s');
-    assert_eq!(ic.get_commit_string(), "ㅏ");
-    assert_eq!(ic.preedit_string(), "ㄱ");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.항목설정(입력항목::자동재배치, false);
+    문맥.처리('j');
+    문맥.처리('s');
+    assert_eq!(문맥.결속문자렬(), "ㅏ");
+    assert_eq!(문맥.편집문자렬(), "ㄱ");
 }
 
 // ============================================================================
@@ -300,110 +300,110 @@ fn test_korean_ic_auto_reorder() {
 
 #[test]
 fn test_korean_ic_combi_on_double_stroke() {
-    let mut ic = create_ic("kps9256");
-    ic.set_option(InputOption::CombiOnDoubleStroke, true);
-    ic.process('s');
-    ic.process('s');
-    ic.process('j');
-    ic.process('s');
-    ic.process('s');
-    assert_eq!(ic.preedit_string(), "깎");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.항목설정(입력항목::두번타건조합, true);
+    문맥.처리('s');
+    문맥.처리('s');
+    문맥.처리('j');
+    문맥.처리('s');
+    문맥.처리('s');
+    assert_eq!(문맥.편집문자렬(), "깎");
 
-    let mut ic = create_ic("kps9256");
-    ic.set_option(InputOption::CombiOnDoubleStroke, true);
-    ic.process('s');
-    ic.process('s');
-    ic.process('j');
-    ic.process('s');
-    ic.process('s');
-    ic.process('j');
-    assert_eq!(ic.preedit_string(), "가");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.항목설정(입력항목::두번타건조합, true);
+    문맥.처리('s');
+    문맥.처리('s');
+    문맥.처리('j');
+    문맥.처리('s');
+    문맥.처리('s');
+    문맥.처리('j');
+    assert_eq!(문맥.편집문자렬(), "가");
 
-    let mut ic = create_ic("kps9256");
-    ic.set_option(InputOption::CombiOnDoubleStroke, true);
-    ic.process('q');
-    ic.process('i');
-    ic.process('g');
-    ic.process('g');
-    assert_eq!(ic.preedit_string(), "벘");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.항목설정(입력항목::두번타건조합, true);
+    문맥.처리('q');
+    문맥.처리('i');
+    문맥.처리('g');
+    문맥.처리('g');
+    assert_eq!(문맥.편집문자렬(), "벘");
 
-    let mut ic = create_ic("kps9256");
-    ic.set_option(InputOption::CombiOnDoubleStroke, true);
-    ic.process('q');
-    ic.process('i');
-    ic.process('g');
-    ic.process('g');
-    ic.process('l');
-    assert_eq!(ic.get_commit_string(), "벗");
-    assert_eq!(ic.preedit_string(), "스");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.항목설정(입력항목::두번타건조합, true);
+    문맥.처리('q');
+    문맥.처리('i');
+    문맥.처리('g');
+    문맥.처리('g');
+    문맥.처리('l');
+    assert_eq!(문맥.결속문자렬(), "벗");
+    assert_eq!(문맥.편집문자렬(), "스");
 
-    let mut ic = create_ic("kps9256");
-    ic.set_option(InputOption::CombiOnDoubleStroke, true);
-    ic.process('s');
-    ic.process('j');
-    ic.process('g');
-    ic.process('g');
-    assert_eq!(ic.preedit_string(), "갔");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.항목설정(입력항목::두번타건조합, true);
+    문맥.처리('s');
+    문맥.처리('j');
+    문맥.처리('g');
+    문맥.처리('g');
+    assert_eq!(문맥.편집문자렬(), "갔");
 
-    let mut ic = create_ic("kps9256");
-    ic.set_option(InputOption::CombiOnDoubleStroke, true);
-    ic.process('s');
-    ic.process('j');
-    ic.process('g');
-    ic.process('g');
-    ic.backspace();
-    assert_eq!(ic.preedit_string(), "갓");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.항목설정(입력항목::두번타건조합, true);
+    문맥.처리('s');
+    문맥.처리('j');
+    문맥.처리('g');
+    문맥.처리('g');
+    문맥.지우기();
+    assert_eq!(문맥.편집문자렬(), "갓");
 
-    let mut ic = create_ic("kps9256");
-    ic.set_option(InputOption::CombiOnDoubleStroke, false);
-    ic.process('s');
-    ic.process('s');
-    assert_eq!(ic.get_commit_string(), "ㄱ");
-    assert_eq!(ic.preedit_string(), "ㄱ");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.항목설정(입력항목::두번타건조합, false);
+    문맥.처리('s');
+    문맥.처리('s');
+    assert_eq!(문맥.결속문자렬(), "ㄱ");
+    assert_eq!(문맥.편집문자렬(), "ㄱ");
 
-    let mut ic = create_ic("kps9256");
-    ic.set_option(InputOption::CombiOnDoubleStroke, false);
-    ic.process('s');
-    ic.process('s');
-    ic.process('j');
-    assert_eq!(ic.preedit_string(), "가");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.항목설정(입력항목::두번타건조합, false);
+    문맥.처리('s');
+    문맥.처리('s');
+    문맥.처리('j');
+    assert_eq!(문맥.편집문자렬(), "가");
 
-    let mut ic = create_ic("kps9256");
-    ic.set_option(InputOption::CombiOnDoubleStroke, false);
-    ic.process('s');
-    ic.process('s');
-    ic.process('j');
-    ic.process('s');
-    assert_eq!(ic.preedit_string(), "각");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.항목설정(입력항목::두번타건조합, false);
+    문맥.처리('s');
+    문맥.처리('s');
+    문맥.처리('j');
+    문맥.처리('s');
+    assert_eq!(문맥.편집문자렬(), "각");
 
-    let mut ic = create_ic("kps9256");
-    ic.set_option(InputOption::CombiOnDoubleStroke, false);
-    ic.process('s');
-    ic.process('s');
-    ic.process('j');
-    ic.process('s');
-    ic.process('s');
-    assert_eq!(ic.get_commit_string(), "각");
-    assert_eq!(ic.preedit_string(), "ㄱ");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.항목설정(입력항목::두번타건조합, false);
+    문맥.처리('s');
+    문맥.처리('s');
+    문맥.처리('j');
+    문맥.처리('s');
+    문맥.처리('s');
+    assert_eq!(문맥.결속문자렬(), "각");
+    assert_eq!(문맥.편집문자렬(), "ㄱ");
 
-    let mut ic = create_ic("kps9256");
-    ic.set_option(InputOption::CombiOnDoubleStroke, false);
-    ic.process('s');
-    ic.process('s');
-    ic.process('j');
-    ic.process('s');
-    ic.process('s');
-    ic.process('j');
-    assert_eq!(ic.preedit_string(), "가");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.항목설정(입력항목::두번타건조합, false);
+    문맥.처리('s');
+    문맥.처리('s');
+    문맥.처리('j');
+    문맥.처리('s');
+    문맥.처리('s');
+    문맥.처리('j');
+    assert_eq!(문맥.편집문자렬(), "가");
 
-    let mut ic = create_ic("kps9256");
-    ic.set_option(InputOption::CombiOnDoubleStroke, false);
-    ic.process('q');
-    ic.process('i');
-    ic.process('g');
-    ic.process('g');
-    assert_eq!(ic.get_commit_string(), "벗");
-    assert_eq!(ic.preedit_string(), "ㅅ");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.항목설정(입력항목::두번타건조합, false);
+    문맥.처리('q');
+    문맥.처리('i');
+    문맥.처리('g');
+    문맥.처리('g');
+    assert_eq!(문맥.결속문자렬(), "벗");
+    assert_eq!(문맥.편집문자렬(), "ㅅ");
 }
 
 // ============================================================================
@@ -412,21 +412,21 @@ fn test_korean_ic_combi_on_double_stroke() {
 
 #[test]
 fn test_korean_ic_non_choseong_combi() {
-    let mut ic = create_ic("kps9256");
-    ic.set_option(InputOption::NonChoseongCombi, true);
-    ic.process('s');
-    ic.process('g');
-    assert_eq!(ic.preedit_string(), "ㄳ");
-    ic.process('j');
-    assert_eq!(ic.get_commit_string(), "ㄱ");
-    assert_eq!(ic.preedit_string(), "사");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.항목설정(입력항목::첫소리밖조합, true);
+    문맥.처리('s');
+    문맥.처리('g');
+    assert_eq!(문맥.편집문자렬(), "ㄳ");
+    문맥.처리('j');
+    assert_eq!(문맥.결속문자렬(), "ㄱ");
+    assert_eq!(문맥.편집문자렬(), "사");
 
-    let mut ic = create_ic("kps9256");
-    ic.set_option(InputOption::NonChoseongCombi, false);
-    ic.process('s');
-    ic.process('g');
-    assert_eq!(ic.get_commit_string(), "ㄱ");
-    assert_eq!(ic.preedit_string(), "ㅅ");
+    let mut 문맥 = 문맥생성("kps9256");
+    문맥.항목설정(입력항목::첫소리밖조합, false);
+    문맥.처리('s');
+    문맥.처리('g');
+    assert_eq!(문맥.결속문자렬(), "ㄱ");
+    assert_eq!(문맥.편집문자렬(), "ㅅ");
 }
 
 // ============================================================================
@@ -446,20 +446,20 @@ fn test_korean_jamo_to_cjamo() {
 
 #[test]
 fn test_edge_cases() {
-    let mut ic = create_ic("kps9256");
-    assert!(ic.is_empty());
-    assert_eq!(ic.preedit_string(), "");
-    assert_eq!(ic.flush(), "");
+    let mut 문맥 = 문맥생성("kps9256");
+    assert!(문맥.is_empty());
+    assert_eq!(문맥.편집문자렬(), "");
+    assert_eq!(문맥.비우기(), "");
 
-    assert!(matches!(ic.backspace(), InputEvent::None));
+    assert!(matches!(문맥.지우기(), 입력사건::없음));
 
-    ic.process('1');
-    assert_eq!(ic.preedit_string(), "");
+    문맥.처리('1');
+    assert_eq!(문맥.편집문자렬(), "");
 
-    ic.process('s');
-    ic.process('j');
-    assert_eq!(ic.flush(), "가");
-    assert_eq!(ic.flush(), "");
+    문맥.처리('s');
+    문맥.처리('j');
+    assert_eq!(문맥.비우기(), "가");
+    assert_eq!(문맥.비우기(), "");
 }
 
 #[test]
@@ -499,9 +499,9 @@ fn test_character_classification() {
     assert!(!소리마디인가('\u{1100}'));
     assert!(!소리마디인가('a'));
 
-    assert!(is_cjamo('\u{3131}'));
-    assert!(is_cjamo('\u{318E}'));
-    assert!(!is_cjamo('\u{1100}'));
+    assert!(호환자모인가('\u{3131}'));
+    assert!(호환자모인가('\u{318E}'));
+    assert!(!호환자모인가('\u{1100}'));
 }
 // ============================================================================
 // Issue Reports
@@ -509,44 +509,44 @@ fn test_character_classification() {
 
 #[test]
 fn test_repro_annyong_bug() {
-    let mut ic = InputContext::new("kps9256").unwrap();
-    ic.set_option(InputOption::CombiOnDoubleStroke, true);
+    let mut 문맥 = 입력문맥::new("kps9256").unwrap();
+    문맥.항목설정(입력항목::두번타건조합, true);
 
-    ic.process('f');
-    ic.process('k');
-    assert_eq!(ic.preedit_string(), "니");
+    문맥.처리('f');
+    문맥.처리('k');
+    assert_eq!(문맥.편집문자렬(), "니");
 
-    ic.process('s');
-    ic.process('s');
-    assert_eq!(ic.preedit_string(), "닊");
+    문맥.처리('s');
+    문맥.처리('s');
+    assert_eq!(문맥.편집문자렬(), "닊");
 
-    ic.process('j');
-    let mut output = ic.get_commit_string().to_string();
-    output.push_str(&ic.preedit_string());
+    문맥.처리('j');
+    let mut output = 문맥.결속문자렬().to_string();
+    output.push_str(&문맥.편집문자렬());
     assert_eq!(output, "닉가");
 }
 
 #[test]
 fn test_composed_split() {
-    let mut ic = InputContext::new("kps9256").unwrap();
-    ic.set_option(InputOption::CombiOnDoubleStroke, true);
+    let mut 문맥 = 입력문맥::new("kps9256").unwrap();
+    문맥.항목설정(입력항목::두번타건조합, true);
 
-    ic.process('f');
-    ic.process('k');
+    문맥.처리('f');
+    문맥.처리('k');
 
-    ic.process('s');
-    ic.process('s');
-    assert_eq!(ic.preedit_string(), "닊");
+    문맥.처리('s');
+    문맥.처리('s');
+    assert_eq!(문맥.편집문자렬(), "닊");
 
-    ic.process('j');
-    let mut output = ic.get_commit_string().to_string();
-    output.push_str(&ic.preedit_string());
+    문맥.처리('j');
+    let mut output = 문맥.결속문자렬().to_string();
+    output.push_str(&문맥.편집문자렬());
     assert_eq!(output, "닉가");
 }
 
 #[test]
 fn test_symbol_mapping() {
-    let mut ic = InputContext::new("kps9256").unwrap();
-    ic.process('?');
-    assert_eq!(ic.get_commit_string(), "?");
+    let mut 문맥 = 입력문맥::new("kps9256").unwrap();
+    문맥.처리('?');
+    assert_eq!(문맥.결속문자렬(), "?");
 }
