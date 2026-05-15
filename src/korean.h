@@ -11,10 +11,7 @@ extern "C" {
 typedef uint32_t ucschar;
 typedef struct _KoreanInputContext KoreanInputContext;
 
-enum {
-  KOREAN_OUTPUT_SYLLABLE = 0,
-  KOREAN_OUTPUT_JAMO = 1
-};
+enum { KOREAN_OUTPUT_SYLLABLE = 0, KOREAN_OUTPUT_JAMO = 1 };
 
 enum {
   KOREAN_IC_OPTION_AUTO_REORDER = 0,
@@ -28,15 +25,15 @@ enum {
 enum { KOREAN_첫소리_FILLER = 0x115F };
 enum { KOREAN_가운데소리_FILLER = 0x1160 };
 
-bool korean_is_initial(ucschar c);
-bool korean_is_medial(ucschar c);
-bool korean_is_final(ucschar c);
-bool korean_is_initial_conjoinable(ucschar c);
-bool korean_is_medial_conjoinable(ucschar c);
-bool korean_is_final_conjoinable(ucschar c);
-bool korean_is_initial_sound_conjoinable(ucschar c);
-bool korean_is_syllable(ucschar c);
-bool korean_is_initial_sound(ucschar c);
+bool korean_첫소리인가(ucschar c);
+bool korean_가운데소리인가(ucschar c);
+bool korean_끝소리인가(ucschar c);
+bool korean_첫소리인가_conjoinable(ucschar c);
+bool korean_가운데소리인가_conjoinable(ucschar c);
+bool korean_끝소리인가_conjoinable(ucschar c);
+bool korean_첫소리인가_sound_conjoinable(ucschar c);
+bool korean_소리마디인가(ucschar c);
+bool korean_첫소리인가_sound(ucschar c);
 bool korean_is_cjamo(ucschar c);
 ucschar korean_initial_sound_to_compat_initial(ucschar ch);
 ucschar korean_initial_sound_to_syllable(ucschar 첫소리, ucschar 가운데소리,

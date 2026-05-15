@@ -1,23 +1,23 @@
 #[must_use]
-pub const fn is_initial(c: char) -> bool {
+pub const fn 첫소리인가(c: char) -> bool {
     let n = c as u32;
     (n >= 0x1100 && n <= 0x115F) || (n >= 0xA960 && n <= 0xA97C)
 }
 
 #[must_use]
-pub const fn is_medial(c: char) -> bool {
+pub const fn 가운데소리인가(c: char) -> bool {
     let n = c as u32;
     (n >= 0x1160 && n <= 0x11A7) || (n >= 0xD7B0 && n <= 0xD7C6)
 }
 
 #[must_use]
-pub const fn is_final(c: char) -> bool {
+pub const fn 끝소리인가(c: char) -> bool {
     let n = c as u32;
     (n >= 0x11A8 && n <= 0x11FF) || (n >= 0xD7CB && n <= 0xD7FB)
 }
 
 #[must_use]
-pub const fn is_syllable(c: char) -> bool {
+pub const fn 소리마디인가(c: char) -> bool {
     (c as u32) >= 0xAC00 && (c as u32) <= 0xD7A3
 }
 
@@ -128,7 +128,7 @@ pub const fn compat_to_conjoining(c: char) -> char {
 }
 
 #[must_use]
-pub const fn 첫소리_호환_첫소리로_변환(c: char) -> char {
+pub const fn 첫소리를_호환첫소리로_변환(c: char) -> char {
     match c as u32 {
         0x1100 | 0x11A8 => '\u{3131}',
         0x1101 | 0x11A9 => '\u{3132}',
@@ -198,8 +198,12 @@ pub const fn 첫소리_호환_첫소리로_변환(c: char) -> char {
 }
 
 #[must_use]
-pub fn 첫소리_음절로_변환(첫소리: char, 가운데소리: char, jo: Option<char>) -> Option<String> {
-    use crate::engine::{첫소리, 끝소리, 가운데소리};
+pub fn 첫소리_소리마디로_변환(
+    첫소리: char,
+    가운데소리: char,
+    jo: Option<char>,
+) -> Option<String> {
+    use crate::engine::{가운데소리, 끝소리, 첫소리};
     use std::convert::TryFrom;
 
     let c = 첫소리::try_from(첫소리)
@@ -222,8 +226,8 @@ pub fn 첫소리_음절로_변환(첫소리: char, 가운데소리: char, jo: Op
 }
 
 #[must_use]
-pub fn 음절_첫소리로_변환(syl: char) -> Option<(char, char, Option<char>)> {
-    if !is_syllable(syl) {
+pub fn 소리마디를_첫소리로_변환(syl: char) -> Option<(char, char, Option<char>)> {
+    if !소리마디인가(syl) {
         return None;
     }
 
@@ -247,7 +251,7 @@ pub fn 음절_첫소리로_변환(syl: char) -> Option<(char, char, Option<char>
 pub fn decompose_string(input: &str) -> String {
     let mut output = String::new();
     for c in input.chars() {
-        if let Some((첫소리, 가운데소리, jo)) = 음절_첫소리로_변환(c) {
+        if let Some((첫소리, 가운데소리, jo)) = 소리마디를_첫소리로_변환(c) {
             output.push(첫소리);
             output.push(가운데소리);
             if let Some(j) = jo {

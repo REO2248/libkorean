@@ -7,7 +7,7 @@ fn create_ic(layout: &str) -> InputContext {
 #[test]
 fn test_multi_syllable_backspace_noble_name() {
     let mut ic = create_ic("tubolsik");
-    ic.set_option(InputOption::NobleName, true);
+    ic.set_option(InputOption::존함, true);
 
     // Type "김일" (R, L, A, D, L, F)
     let keys = vec!['r', 'l', 'a', 'd', 'l', 'f'];
@@ -42,7 +42,7 @@ fn test_multi_syllable_backspace_noble_name() {
 #[test]
 fn test_multi_syllable_backspace_standard() {
     let mut ic = create_ic("tubolsik");
-    // NobleName is false by default
+    // 존함 is false by default
 
     ic.process('r');
     ic.process('k');

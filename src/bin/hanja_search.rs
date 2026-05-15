@@ -5,7 +5,7 @@
 //! echo "삼국사기" | cargo run --bin hanja-search
 //! ```
 
-use korean::hanja::HanjaDict;
+use korean::hanja::한자사전;
 use std::io::{self, BufRead};
 use std::path::PathBuf;
 use std::process;
@@ -36,7 +36,7 @@ fn main() {
                 process::exit(0);
             }
             "-v" | "--version" => {
-                println!("hanja-search {}", env!("CARGO_PKG_VERSION"));
+                println!("한자검색 {}", env!("CARGO_PKG_VERSION"));
                 process::exit(0);
             }
             other => {
@@ -59,7 +59,7 @@ fn main() {
         process::exit(1);
     }
 
-    let dict = match HanjaDict::load(&dict_path) {
+    let dict = match 한자사전::load(&dict_path) {
         Ok(dict) => dict,
         Err(e) => {
             eprintln!("Error loading dictionary: {e}");
@@ -85,7 +85,7 @@ fn main() {
     }
 }
 
-fn search_and_print(dict: &HanjaDict, key: &str) {
+fn search_and_print(dict: &한자사전, key: &str) {
     let results = dict.match_prefix(key);
 
     for entry in &results {
@@ -96,9 +96,9 @@ fn search_and_print(dict: &HanjaDict, key: &str) {
 
 fn print_usage() {
     println!(
-        r#"Usage: hanja-search [OPTION]... [DICT_FILE]
+        r#"Usage: 한자검색 [OPTION]... [DICT_FILE]
 
-Search hanja dictionary.
+Search 한자 dictionary.
 
 Options:
   -f, --file=FILE       Dictionary file (default: data/hanja/hanja.txt)
@@ -107,8 +107,8 @@ Options:
   -v, --version         Output version information
 
 Examples:
-  echo "삼국사기" | hanja-search
-  hanja-search -k "한자"
-  hanja-search /path/to/hanja.txt"#
+  echo "삼국사기" | 한자검색
+  한자검색 -k "한자"
+  한자검색 /path/to/hanja.txt"#
     );
 }

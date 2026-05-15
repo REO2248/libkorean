@@ -3,18 +3,18 @@ use std::io::{BufRead, BufReader, Seek, SeekFrom};
 use std::path::Path;
 
 #[derive(Debug, Clone)]
-pub struct HanjaEntry {
+pub struct 한자 {
     pub key: String,
     pub value: String,
     pub comment: Option<String>,
 }
 
-pub struct HanjaDict {
+pub struct 한자사전 {
     map: fst::Map<Vec<u8>>,
     file: File,
 }
 
-impl HanjaDict {
+impl 한자사전 {
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self, std::io::Error> {
         let file = File::open(path)?;
         let mut reader = BufReader::new(file.try_clone()?);
@@ -52,12 +52,12 @@ impl HanjaDict {
         Ok(Self { map, file })
     }
 
-    pub fn match_exact(&self, key: &str) -> Option<Vec<HanjaEntry>> {
+    pub fn match_exact(&self, key: &str) -> Option<Vec<한자>> {
         let file_offset = self.map.get(key)?;
         self.read_entries_from_offset(file_offset, Some(key))
     }
 
-    pub fn match_prefix(&self, key: &str) -> Vec<HanjaEntry> {
+    pub fn match_prefix(&self, key: &str) -> Vec<한자> {
         let mut results = Vec::new();
         let chars: Vec<char> = key.chars().collect();
 
@@ -71,7 +71,7 @@ impl HanjaDict {
         results
     }
 
-    pub fn match_suffix(&self, key: &str) -> Vec<HanjaEntry> {
+    pub fn match_suffix(&self, key: &str) -> Vec<한자> {
         let mut results = Vec::new();
         let chars: Vec<char> = key.chars().collect();
 
@@ -89,7 +89,7 @@ impl HanjaDict {
         &self,
         offset: u64,
         filter_key: Option<&str>,
-    ) -> Option<Vec<HanjaEntry>> {
+    ) -> Option<Vec<한자>> {
         let mut file = self.file.try_clone().ok()?;
         file.seek(SeekFrom::Start(offset)).ok()?;
         let mut reader = BufReader::new(file);
@@ -123,14 +123,14 @@ impl HanjaDict {
                     break;
                 }
                 if entry_key == target {
-                    results.push(HanjaEntry {
+                    results.push(한자 {
                         key: entry_key.to_string(),
                         value: value.to_string(),
                         comment,
                     });
                 }
             } else {
-                results.push(HanjaEntry {
+                results.push(한자 {
                     key: entry_key.to_string(),
                     value: value.to_string(),
                     comment,
@@ -153,7 +153,7 @@ mod tests {
             return;
         }
 
-        let dict = HanjaDict::load(path).expect("failed to load hanja dict");
+        let dict = 한자사전::load(path).expect("failed to load hanja dict");
 
         let results = dict.match_prefix("ㄱ");
         let _ = results;

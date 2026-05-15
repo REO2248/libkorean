@@ -11,7 +11,7 @@ pub struct InputOptions {
     pub medial_combi: bool,
     pub treat_final_as_initial: bool,
     pub old_jamo_mode: bool,
-    pub noble_name: bool,
+    pub 존함: bool,
     pub word_unit_commit: bool,
 }
 
@@ -24,7 +24,7 @@ impl Default for InputOptions {
             medial_combi: true,
             treat_final_as_initial: true,
             old_jamo_mode: false,
-            noble_name: false,
+            존함: false,
             word_unit_commit: false,
         }
     }
@@ -33,19 +33,19 @@ impl Default for InputOptions {
 #[derive(Hash, Serialize, Deserialize, Debug, EnumSetType)]
 #[enumset(serialize_repr = "list")]
 pub enum Addon {
-    Compose첫소리Toen,
-    Compose가운데소리Toen,
-    Compose끝소리Toen,
-    Decompose첫소리Toen,
-    Decompose가운데소리Toen,
-    Decompose끝소리Toen,
+    첫소리된소리조합,
+    가운데소리된소리조합,
+    끝소리된소리조합,
+    첫소리된소리분해,
+    가운데소리된소리분해,
+    끝소리된소리분해,
     FlexibleComposeOrder,
     Treat끝소리As첫소리,
     Treat끝소리As첫소리Compose,
 }
 
 pub fn default_addons() -> EnumSet<Addon> {
-    EnumSet::only(Addon::Compose첫소리Toen).union(EnumSet::only(Addon::Treat끝소리As첫소리))
+    EnumSet::only(Addon::첫소리된소리조합).union(EnumSet::only(Addon::Treat끝소리As첫소리))
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]

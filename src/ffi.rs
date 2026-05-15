@@ -44,17 +44,17 @@ struct ManagedContext {
 
 #[no_mangle]
 pub extern "C" fn korean_is_initial(c: ucschar) -> bool {
-    char::from_u32(c).is_some_and(char_utils::is_initial)
+    char::from_u32(c).is_some_and(char_utils::첫소리인가)
 }
 
 #[no_mangle]
 pub extern "C" fn korean_is_medial(c: ucschar) -> bool {
-    char::from_u32(c).is_some_and(char_utils::is_medial)
+    char::from_u32(c).is_some_and(char_utils::가운데소리인가)
 }
 
 #[no_mangle]
 pub extern "C" fn korean_is_final(c: ucschar) -> bool {
-    char::from_u32(c).is_some_and(char_utils::is_final)
+    char::from_u32(c).is_some_and(char_utils::끝소리인가)
 }
 
 #[no_mangle]
@@ -79,7 +79,7 @@ pub extern "C" fn korean_is_initial_sound_conjoinable(c: ucschar) -> bool {
 
 #[no_mangle]
 pub extern "C" fn korean_is_syllable(c: ucschar) -> bool {
-    char::from_u32(c).is_some_and(char_utils::is_syllable)
+    char::from_u32(c).is_some_and(char_utils::소리마디인가)
 }
 
 #[no_mangle]
@@ -95,7 +95,7 @@ pub extern "C" fn korean_is_cjamo(c: ucschar) -> bool {
 #[no_mangle]
 pub extern "C" fn korean_initial_sound_to_compat_initial(c: ucschar) -> ucschar {
     char::from_u32(c)
-        .map(char_utils::첫소리_호환_첫소리로_변환)
+        .map(char_utils::첫소리를_호환첫소리로_변환)
         .map_or(c, |ch| ch as u32)
 }
 
@@ -115,7 +115,7 @@ pub extern "C" fn korean_initial_sound_to_syllable(
 
     match (cho_c, jung_c) {
         (Some(c), Some(j)) => {
-            if let Some(syl_str) = char_utils::첫소리_음절로_변환(c, j, jong_c) {
+            if let Some(syl_str) = char_utils::첫소리_소리마디로_변환(c, j, jong_c) {
                 if syl_str.chars().count() == 1 {
                     return syl_str.chars().next().unwrap() as ucschar;
                 }
@@ -136,7 +136,7 @@ pub unsafe extern "C" fn korean_syllable_to_initial_sound(
     끝소리: *mut ucschar,
 ) {
     if let Some(c) = char::from_u32(syl) {
-        if let Some((c2, j, jo)) = char_utils::음절_첫소리로_변환(c) {
+        if let Some((c2, j, jo)) = char_utils::소리마디를_첫소리로_변환(c) {
             if !첫소리.is_null() {
                 *첫소리 = c2 as u32;
             }
@@ -287,7 +287,7 @@ pub unsafe extern "C" fn korean_ic_set_option(
         1 => InputOption::CombiOnDoubleStroke,
         2 => InputOption::NonChoseongCombi,
         3 => InputOption::OldJamo,
-        4 => InputOption::NobleName,
+        4 => InputOption::존함,
         5 => InputOption::WordUnitCommit,
         _ => return,
     };
@@ -305,7 +305,7 @@ pub unsafe extern "C" fn korean_ic_get_option(hic: *mut KoreanInputContext, opti
         1 => InputOption::CombiOnDoubleStroke,
         2 => InputOption::NonChoseongCombi,
         3 => InputOption::OldJamo,
-        4 => InputOption::NobleName,
+        4 => InputOption::존함,
         5 => InputOption::WordUnitCommit,
         _ => return false,
     };
@@ -386,35 +386,35 @@ pub unsafe extern "C" fn korean_ic_set_output_mode(hic: *mut KoreanInputContext,
     };
     if mode == KOREAN_OUTPUT_JAMO {
         ctx.ic
-            .set_output_mode(crate::input_context::OutputMode::Jamo);
+            .set_output_mode(crate::input_context::OutputMode::자모);
     } else {
         ctx.ic
-            .set_output_mode(crate::input_context::OutputMode::Syllable);
+            .set_output_mode(crate::input_context::OutputMode::소리마디);
     }
 }
-use crate::hanja::{HanjaDict, HanjaEntry};
+use crate::hanja::{한자사전, 한자};
 
 #[repr(C)]
-pub struct HanjaTable {
+pub struct 한자방식 {
     _private: [u8; 0],
 }
 
 #[repr(C)]
-pub struct HanjaList {
+pub struct 한자목록 {
     _private: [u8; 0],
 }
 
 #[repr(C)]
-pub struct Hanja {
+pub struct 한자Ffi {
     _private: [u8; 0],
 }
 
-struct ManagedHanjaList {
+struct Managed한자목록 {
     key: CString,
-    entries: Vec<ManagedHanja>,
+    entries: Vec<Managed한자Ffi>,
 }
 
-struct ManagedHanja {
+struct Managed한자Ffi {
     key: CString,
     value: CString,
     comment: CString,
@@ -423,7 +423,7 @@ struct ManagedHanja {
 ///
 /// `filename` must be null or a valid null-terminated C string.
 #[no_mangle]
-pub unsafe extern "C" fn hanja_table_load(filename: *const c_char) -> *mut HanjaTable {
+pub unsafe extern "C" fn hanja_table_load(filename: *const c_char) -> *mut 한자방식 {
     let path = if filename.is_null() {
         let paths = [
             format!("{}/data/hanja/hanja.txt", env!("CARGO_MANIFEST_DIR")),
@@ -442,36 +442,36 @@ pub unsafe extern "C" fn hanja_table_load(filename: *const c_char) -> *mut Hanja
         return std::ptr::null_mut();
     }
 
-    HanjaDict::load(&path)
-        .map(|dict| Box::into_raw(Box::new(dict)).cast::<HanjaTable>())
+    한자사전::load(&path)
+        .map(|dict| Box::into_raw(Box::new(dict)).cast::<한자방식>())
         .unwrap_or(std::ptr::null_mut())
 }
 
 ///
 /// `table` must be null or a pointer returned by `hanja_table_load`.
 #[no_mangle]
-pub unsafe extern "C" fn hanja_table_delete(table: *mut HanjaTable) {
+pub unsafe extern "C" fn hanja_table_delete(table: *mut 한자방식) {
     if !table.is_null() {
-        drop(Box::from_raw(table.cast::<HanjaDict>()));
+        drop(Box::from_raw(table.cast::<한자사전>()));
     }
 }
-fn make_hanja_list(key: &str, entries: Vec<HanjaEntry>) -> *mut HanjaList {
+fn make_hanja_list(key: &str, entries: Vec<한자>) -> *mut 한자목록 {
     let managed_key = CString::new(key).unwrap_or_default();
-    let managed_entries: Vec<ManagedHanja> = entries
+    let managed_entries: Vec<Managed한자Ffi> = entries
         .into_iter()
-        .map(|e| ManagedHanja {
+        .map(|e| Managed한자Ffi {
             key: CString::new(e.key).unwrap_or_default(),
             value: CString::new(e.value).unwrap_or_default(),
             comment: CString::new(e.comment.unwrap_or_default()).unwrap_or_default(),
         })
         .collect();
 
-    let list = ManagedHanjaList {
+    let list = Managed한자목록 {
         key: managed_key,
         entries: managed_entries,
     };
 
-    Box::into_raw(Box::new(list)).cast::<HanjaList>()
+    Box::into_raw(Box::new(list)).cast::<한자목록>()
 }
 
 ///
@@ -479,13 +479,13 @@ fn make_hanja_list(key: &str, entries: Vec<HanjaEntry>) -> *mut HanjaList {
 /// `key` must be a valid null-terminated C string.
 #[no_mangle]
 pub unsafe extern "C" fn hanja_table_match_exact(
-    table: *const HanjaTable,
+    table: *const 한자방식,
     key: *const c_char,
-) -> *mut HanjaList {
+) -> *mut 한자목록 {
     if table.is_null() || key.is_null() {
         return std::ptr::null_mut();
     }
-    let dict = unsafe { &*table.cast::<HanjaDict>() };
+    let dict = unsafe { &*table.cast::<한자사전>() };
     let c_str = unsafe { CStr::from_ptr(key) };
     let Ok(key_str) = c_str.to_str() else {
         return std::ptr::null_mut();
@@ -501,13 +501,13 @@ pub unsafe extern "C" fn hanja_table_match_exact(
 /// `key` must be a valid null-terminated C string.
 #[no_mangle]
 pub unsafe extern "C" fn hanja_table_match_prefix(
-    table: *const HanjaTable,
+    table: *const 한자방식,
     key: *const c_char,
-) -> *mut HanjaList {
+) -> *mut 한자목록 {
     if table.is_null() || key.is_null() {
         return std::ptr::null_mut();
     }
-    let dict = unsafe { &*table.cast::<HanjaDict>() };
+    let dict = unsafe { &*table.cast::<한자사전>() };
     let c_str = unsafe { CStr::from_ptr(key) };
     let Ok(key_str) = c_str.to_str() else {
         return std::ptr::null_mut();
@@ -524,13 +524,13 @@ pub unsafe extern "C" fn hanja_table_match_prefix(
 /// `key` must be a valid null-terminated C string.
 #[no_mangle]
 pub unsafe extern "C" fn hanja_table_match_suffix(
-    table: *const HanjaTable,
+    table: *const 한자방식,
     key: *const c_char,
-) -> *mut HanjaList {
+) -> *mut 한자목록 {
     if table.is_null() || key.is_null() {
         return std::ptr::null_mut();
     }
-    let dict = unsafe { &*table.cast::<HanjaDict>() };
+    let dict = unsafe { &*table.cast::<한자사전>() };
     let c_str = unsafe { CStr::from_ptr(key) };
     let Ok(key_str) = c_str.to_str() else {
         return std::ptr::null_mut();
@@ -545,22 +545,22 @@ pub unsafe extern "C" fn hanja_table_match_suffix(
 ///
 /// `list` must be null or a pointer returned by hanja_table_match_*.
 #[no_mangle]
-pub unsafe extern "C" fn hanja_list_get_size(list: *const HanjaList) -> c_int {
-    let Some(ptr) = NonNull::new(list as *mut HanjaList) else {
+pub unsafe extern "C" fn hanja_list_get_size(list: *const 한자목록) -> c_int {
+    let Some(ptr) = NonNull::new(list as *mut 한자목록) else {
         return 0;
     };
-    let managed = unsafe { ptr.cast::<ManagedHanjaList>().as_ref() };
+    let managed = unsafe { ptr.cast::<Managed한자목록>().as_ref() };
     managed.entries.len() as c_int
 }
 ///
 /// `list` must be null or a pointer returned by hanja_table_match_*.
 /// The returned pointer is valid as long as `list` is not deleted.
 #[no_mangle]
-pub unsafe extern "C" fn hanja_list_get_key(list: *const HanjaList) -> *const c_char {
-    let Some(ptr) = NonNull::new(list as *mut HanjaList) else {
+pub unsafe extern "C" fn hanja_list_get_key(list: *const 한자목록) -> *const c_char {
+    let Some(ptr) = NonNull::new(list as *mut 한자목록) else {
         return std::ptr::null();
     };
-    let managed = unsafe { ptr.cast::<ManagedHanjaList>().as_ref() };
+    let managed = unsafe { ptr.cast::<Managed한자목록>().as_ref() };
     managed.key.as_ptr()
 }
 ///
@@ -568,13 +568,13 @@ pub unsafe extern "C" fn hanja_list_get_key(list: *const HanjaList) -> *const c_
 /// The returned pointer is valid as long as `list` is not deleted.
 #[no_mangle]
 pub unsafe extern "C" fn hanja_list_get_nth_key(
-    list: *const HanjaList,
+    list: *const 한자목록,
     n: c_uint,
 ) -> *const c_char {
-    let Some(ptr) = NonNull::new(list as *mut HanjaList) else {
+    let Some(ptr) = NonNull::new(list as *mut 한자목록) else {
         return std::ptr::null();
     };
-    let managed = unsafe { ptr.cast::<ManagedHanjaList>().as_ref() };
+    let managed = unsafe { ptr.cast::<Managed한자목록>().as_ref() };
     managed
         .entries
         .get(n as usize)
@@ -585,13 +585,13 @@ pub unsafe extern "C" fn hanja_list_get_nth_key(
 /// The returned pointer is valid as long as `list` is not deleted.
 #[no_mangle]
 pub unsafe extern "C" fn hanja_list_get_nth_value(
-    list: *const HanjaList,
+    list: *const 한자목록,
     n: c_uint,
 ) -> *const c_char {
-    let Some(ptr) = NonNull::new(list as *mut HanjaList) else {
+    let Some(ptr) = NonNull::new(list as *mut 한자목록) else {
         return std::ptr::null();
     };
-    let managed = unsafe { ptr.cast::<ManagedHanjaList>().as_ref() };
+    let managed = unsafe { ptr.cast::<Managed한자목록>().as_ref() };
     managed
         .entries
         .get(n as usize)
@@ -602,13 +602,13 @@ pub unsafe extern "C" fn hanja_list_get_nth_value(
 /// The returned pointer is valid as long as `list` is not deleted.
 #[no_mangle]
 pub unsafe extern "C" fn hanja_list_get_nth_comment(
-    list: *const HanjaList,
+    list: *const 한자목록,
     n: c_uint,
 ) -> *const c_char {
-    let Some(ptr) = NonNull::new(list as *mut HanjaList) else {
+    let Some(ptr) = NonNull::new(list as *mut 한자목록) else {
         return std::ptr::null();
     };
-    let managed = unsafe { ptr.cast::<ManagedHanjaList>().as_ref() };
+    let managed = unsafe { ptr.cast::<Managed한자목록>().as_ref() };
     managed
         .entries
         .get(n as usize)
@@ -618,57 +618,57 @@ pub unsafe extern "C" fn hanja_list_get_nth_comment(
 /// `list` must be null or a pointer returned by hanja_table_match_*.
 /// The returned pointer is valid as long as `list` is not deleted.
 #[no_mangle]
-pub unsafe extern "C" fn hanja_list_get_nth(list: *const HanjaList, n: c_uint) -> *const Hanja {
-    let Some(ptr) = NonNull::new(list as *mut HanjaList) else {
+pub unsafe extern "C" fn hanja_list_get_nth(list: *const 한자목록, n: c_uint) -> *const 한자Ffi {
+    let Some(ptr) = NonNull::new(list as *mut 한자목록) else {
         return std::ptr::null();
     };
-    let managed = unsafe { ptr.cast::<ManagedHanjaList>().as_ref() };
+    let managed = unsafe { ptr.cast::<Managed한자목록>().as_ref() };
     managed
         .entries
         .get(n as usize)
         .map_or(std::ptr::null(), |e| {
-            std::ptr::from_ref::<ManagedHanja>(e).cast::<Hanja>()
+            std::ptr::from_ref::<Managed한자Ffi>(e).cast::<한자Ffi>()
         })
 }
 ///
 /// `list` must be null or a pointer returned by hanja_table_match_*.
 /// After calling this function, `list` and all pointers derived from it become invalid.
 #[no_mangle]
-pub unsafe extern "C" fn hanja_list_delete(list: *mut HanjaList) {
+pub unsafe extern "C" fn hanja_list_delete(list: *mut 한자목록) {
     if !list.is_null() {
-        drop(Box::from_raw(list.cast::<ManagedHanjaList>()));
+        drop(Box::from_raw(list.cast::<Managed한자목록>()));
     }
 }
 ///
 /// `hanja` must be null or a pointer returned by `hanja_list_get_nth`.
-/// The returned pointer is valid as long as the parent `HanjaList` is not deleted.
+/// The returned pointer is valid as long as the parent `한자목록` is not deleted.
 #[no_mangle]
-pub unsafe extern "C" fn hanja_get_key(hanja: *const Hanja) -> *const c_char {
-    let Some(ptr) = NonNull::new(hanja as *mut Hanja) else {
+pub unsafe extern "C" fn hanja_get_key(hanja: *const 한자Ffi) -> *const c_char {
+    let Some(ptr) = NonNull::new(hanja as *mut 한자Ffi) else {
         return std::ptr::null();
     };
-    let managed = unsafe { ptr.cast::<ManagedHanja>().as_ref() };
+    let managed = unsafe { ptr.cast::<Managed한자Ffi>().as_ref() };
     managed.key.as_ptr()
 }
 ///
 /// `hanja` must be null or a pointer returned by `hanja_list_get_nth`.
-/// The returned pointer is valid as long as the parent `HanjaList` is not deleted.
+/// The returned pointer is valid as long as the parent `한자목록` is not deleted.
 #[no_mangle]
-pub unsafe extern "C" fn hanja_get_value(hanja: *const Hanja) -> *const c_char {
-    let Some(ptr) = NonNull::new(hanja as *mut Hanja) else {
+pub unsafe extern "C" fn hanja_get_value(hanja: *const 한자Ffi) -> *const c_char {
+    let Some(ptr) = NonNull::new(hanja as *mut 한자Ffi) else {
         return std::ptr::null();
     };
-    let managed = unsafe { ptr.cast::<ManagedHanja>().as_ref() };
+    let managed = unsafe { ptr.cast::<Managed한자Ffi>().as_ref() };
     managed.value.as_ptr()
 }
 ///
 /// `hanja` must be null or a pointer returned by `hanja_list_get_nth`.
-/// The returned pointer is valid as long as the parent `HanjaList` is not deleted.
+/// The returned pointer is valid as long as the parent `한자목록` is not deleted.
 #[no_mangle]
-pub unsafe extern "C" fn hanja_get_comment(hanja: *const Hanja) -> *const c_char {
-    let Some(ptr) = NonNull::new(hanja as *mut Hanja) else {
+pub unsafe extern "C" fn hanja_get_comment(hanja: *const 한자Ffi) -> *const c_char {
+    let Some(ptr) = NonNull::new(hanja as *mut 한자Ffi) else {
         return std::ptr::null();
     };
-    let managed = unsafe { ptr.cast::<ManagedHanja>().as_ref() };
+    let managed = unsafe { ptr.cast::<Managed한자Ffi>().as_ref() };
     managed.comment.as_ptr()
 }

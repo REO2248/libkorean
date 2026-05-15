@@ -1,8 +1,8 @@
 //! Comprehensive integration tests
 
 use korean::char_utils::{
-    첫소리_호환_첫소리로_변환, is_cjamo, is_final, is_initial, is_medial, is_syllable,
-    음절_첫소리로_변환,
+    is_cjamo, 가운데소리인가, 끝소리인가, 소리마디를_첫소리로_변환, 소리마디인가,
+    첫소리를_호환첫소리로_변환, 첫소리인가,
 };
 use korean::input_context::{InputContext, InputEvent, InputOption};
 
@@ -435,9 +435,9 @@ fn test_korean_ic_non_choseong_combi() {
 
 #[test]
 fn test_korean_jamo_to_cjamo() {
-    assert_eq!(첫소리_호환_첫소리로_변환('\u{11F2}'), '\u{3183}');
-    assert_eq!(첫소리_호환_첫소리로_변환('\u{A971}'), '\u{316F}');
-    assert_eq!(첫소리_호환_첫소리로_변환('\u{D7F9}'), '\u{3149}');
+    assert_eq!(첫소리를_호환첫소리로_변환('\u{11F2}'), '\u{3183}');
+    assert_eq!(첫소리를_호환첫소리로_변환('\u{A971}'), '\u{316F}');
+    assert_eq!(첫소리를_호환첫소리로_변환('\u{D7F9}'), '\u{3149}');
 }
 
 // ============================================================================
@@ -472,32 +472,32 @@ fn test_syllable_decomposition() {
     ];
 
     for (syl, expected) in tests {
-        let result = 음절_첫소리로_변환(syl).unwrap();
+        let result = 소리마디를_첫소리로_변환(syl).unwrap();
         assert_eq!(result, expected, "Failed for {}", syl);
     }
 }
 
 #[test]
 fn test_character_classification() {
-    assert!(is_initial('\u{1100}'));
-    assert!(is_initial('\u{1112}'));
-    assert!(is_initial('\u{A960}'));
-    assert!(!is_initial('\u{1161}'));
+    assert!(첫소리인가('\u{1100}'));
+    assert!(첫소리인가('\u{1112}'));
+    assert!(첫소리인가('\u{A960}'));
+    assert!(!첫소리인가('\u{1161}'));
 
-    assert!(is_medial('\u{1161}'));
-    assert!(is_medial('\u{1175}'));
-    assert!(is_medial('\u{D7B0}'));
-    assert!(!is_medial('\u{1100}'));
+    assert!(가운데소리인가('\u{1161}'));
+    assert!(가운데소리인가('\u{1175}'));
+    assert!(가운데소리인가('\u{D7B0}'));
+    assert!(!가운데소리인가('\u{1100}'));
 
-    assert!(is_final('\u{11A8}'));
-    assert!(is_final('\u{11C2}'));
-    assert!(is_final('\u{D7CB}'));
-    assert!(!is_final('\u{1100}'));
+    assert!(끝소리인가('\u{11A8}'));
+    assert!(끝소리인가('\u{11C2}'));
+    assert!(끝소리인가('\u{D7CB}'));
+    assert!(!끝소리인가('\u{1100}'));
 
-    assert!(is_syllable('가'));
-    assert!(is_syllable('힣'));
-    assert!(!is_syllable('\u{1100}'));
-    assert!(!is_syllable('a'));
+    assert!(소리마디인가('가'));
+    assert!(소리마디인가('힣'));
+    assert!(!소리마디인가('\u{1100}'));
+    assert!(!소리마디인가('a'));
 
     assert!(is_cjamo('\u{3131}'));
     assert!(is_cjamo('\u{318E}'));

@@ -1,6 +1,6 @@
-use crate::char_utils::첫소리_호환_첫소리로_변환;
+use crate::char_utils::첫소리를_호환첫소리로_변환;
 use crate::engine::{
-    첫소리_끝소리_변환, 끝소리, 끝소리To첫소리, 첫소리, InputOptions, KeyValue, 가운데소리,
+    InputOptions, KeyValue, 가운데소리, 끝소리, 끝소리To첫소리, 첫소리, 첫소리_끝소리_변환,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -61,9 +61,9 @@ impl CharacterState {
     pub fn preedit(&self, out: &mut String) {
         match (self.첫소리, self.가운데소리, self.끝소리) {
             (Some(c), Some(j), jo) => out.push_str(&c.compose(j, jo)),
-            (Some(c), None, None) => out.push(첫소리_호환_첫소리로_변환(c.into())),
-            (None, Some(j), None) => out.push(첫소리_호환_첫소리로_변환(j.into())),
-            (None, None, Some(jo)) => out.push(첫소리_호환_첫소리로_변환(jo.into())),
+            (Some(c), None, None) => out.push(첫소리를_호환첫소리로_변환(c.into())),
+            (None, Some(j), None) => out.push(첫소리를_호환첫소리로_변환(j.into())),
+            (None, None, Some(jo)) => out.push(첫소리를_호환첫소리로_변환(jo.into())),
             (None, Some(j), Some(jo)) => {
                 out.push(j.jamo());
                 out.push(jo.jamo());
@@ -116,12 +116,9 @@ impl CharacterState {
             } => self.가운데소리(가운데소리, compose, opts),
             KeyValue::끝소리 { 끝소리 } => self.끝소리(끝소리, Some(kv), opts),
             KeyValue::Both {
-                첫소리,
-                끝소리,
+                첫소리, 끝소리
             } => {
-                if self.첫소리.is_some()
-                    && self.가운데소리.is_some()
-                    && self.끝소리.is_none()
+                if self.첫소리.is_some() && self.가운데소리.is_some() && self.끝소리.is_none()
                 {
                     self.끝소리(끝소리, Some(kv), opts)
                 } else {
@@ -222,7 +219,8 @@ impl CharacterState {
                 첫소리: Some(첫소리),
                 ..Default::default()
             })
-        } else if opts.auto_reorder || (self.가운데소리.is_none() && self.끝소리.is_none()) {
+        } else if opts.auto_reorder || (self.가운데소리.is_none() && self.끝소리.is_none())
+        {
             self.첫소리 = Some(첫소리);
             CharacterResult::Consume
         } else {
@@ -243,7 +241,7 @@ impl CharacterState {
             if opts.treat_final_as_initial {
                 let (new_jong, next_cho) = self.calculate_jongseong_move(j, opts);
                 let next_history = vec![KeyValue::첫소리 {
-                    첫소리: next_cho,
+                    첫소리: next_cho
                 }];
                 let next = Self {
                     첫소리: Some(next_cho),
@@ -288,7 +286,11 @@ impl CharacterState {
         }
     }
 
-    fn calculate_jongseong_move(&self, j: 끝소리, opts: InputOptions) -> (Option<끝소리>, 첫소리) {
+    fn calculate_jongseong_move(
+        &self,
+        j: 끝소리,
+        opts: InputOptions,
+    ) -> (Option<끝소리>, 첫소리) {
         if let Some(KeyValue::Both { 첫소리, .. }) = self.final_kv {
             return (None, 첫소리);
         }

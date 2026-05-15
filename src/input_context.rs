@@ -12,8 +12,8 @@ pub enum InputEvent {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum OutputMode {
     #[default]
-    Syllable,
-    Jamo,
+    소리마디,
+    자모,
 }
 
 pub struct InputContext {
@@ -54,7 +54,7 @@ impl InputContext {
             layout,
             layout_id: layout_id.to_string(),
             options,
-            output_mode: OutputMode::Syllable,
+            output_mode: OutputMode::소리마디,
             commit_string: String::new(),
             input_buffer: String::new(),
             noble_history: String::new(),
@@ -68,11 +68,11 @@ impl InputContext {
             InputOption::CombiOnDoubleStroke => self.options.combi_on_double_stroke = value,
             InputOption::NonChoseongCombi => self.options.non_initial_combi = value,
             InputOption::OldJamo => self.options.old_jamo_mode = value,
-            InputOption::NobleName => {
-                if self.options.noble_name && !value {
+            InputOption::존함 => {
+                if self.options.존함 && !value {
                     self.flush_noble_name();
                 }
-                self.options.noble_name = value;
+                self.options.존함 = value;
             }
             InputOption::WordUnitCommit => self.options.word_unit_commit = value,
         }
@@ -84,7 +84,7 @@ impl InputContext {
             InputOption::CombiOnDoubleStroke => self.options.combi_on_double_stroke,
             InputOption::NonChoseongCombi => self.options.non_initial_combi,
             InputOption::OldJamo => self.options.old_jamo_mode,
-            InputOption::NobleName => self.options.noble_name,
+            InputOption::존함 => self.options.존함,
             InputOption::WordUnitCommit => self.options.word_unit_commit,
         }
     }
@@ -235,9 +235,10 @@ impl InputContext {
 
         if let KeyValue::끝소리 { 끝소리 } = kv {
             if !self.state.has_initial() && !self.state.has_medial() && !self.state.has_final() {
-                if let crate::engine::끝소리To첫소리::Direct(next_cho) = 끝소리.to_initial() {
+                if let crate::engine::끝소리To첫소리::Direct(next_cho) = 끝소리.to_initial()
+                {
                     kv = KeyValue::첫소리 {
-                        첫소리: next_cho,
+                        첫소리: next_cho
                     };
                 }
             }
@@ -305,14 +306,14 @@ impl InputContext {
         let history = self.noble_history.clone();
 
         match self.output_mode {
-            OutputMode::Syllable => self.state.preedit(&mut out),
-            OutputMode::Jamo => self.state.jamo(&mut out),
+            OutputMode::소리마디 => self.state.preedit(&mut out),
+            OutputMode::자모 => self.state.jamo(&mut out),
         }
 
         let mut combined = history.clone();
         combined.push_str(&out);
 
-        if self.options.noble_name {
+        if self.options.존함 {
             if combined.contains("김일성") {
                 combined = combined.replace("김일성", "\u{F113}\u{F114}\u{F115}");
                 return combined;
@@ -348,11 +349,10 @@ impl InputContext {
                             self.options,
                         );
                     } else if let KeyValue::끝소리 { 끝소리 } = kv {
-                        if let crate::engine::끝소리To첫소리::Direct(next_cho) =
-                            끝소리.to_initial()
+                        if let crate::engine::끝소리To첫소리::Direct(next_cho) = 끝소리.to_initial()
                         {
                             kv = KeyValue::첫소리 {
-                                첫소리: next_cho,
+                                첫소리: next_cho
                             };
                         }
                     }
@@ -361,8 +361,8 @@ impl InputContext {
                     CharacterResult::Consume => {
                         out.clear();
                         match self.output_mode {
-                            OutputMode::Syllable => temp_state.preedit(&mut out),
-                            OutputMode::Jamo => temp_state.jamo(&mut out),
+                            OutputMode::소리마디 => temp_state.preedit(&mut out),
+                            OutputMode::자모 => temp_state.jamo(&mut out),
                         }
                     }
                     CharacterResult::NewCharacter(mut next) => {
@@ -381,11 +381,11 @@ impl InputContext {
                             next = final_next;
                         }
                         match self.output_mode {
-                            OutputMode::Syllable => {
+                            OutputMode::소리마디 => {
                                 temp_state.preedit(&mut out);
                                 next.preedit(&mut out);
                             }
-                            OutputMode::Jamo => {
+                            OutputMode::자모 => {
                                 temp_state.jamo(&mut out);
                                 next.jamo(&mut out);
                             }
@@ -409,11 +409,11 @@ impl InputContext {
 
     fn flush_to_commit(&mut self) {
         match self.output_mode {
-            OutputMode::Syllable => {
+            OutputMode::소리마디 => {
                 self.commit_syllable();
                 self.flush_noble_name();
             }
-            OutputMode::Jamo => {
+            OutputMode::자모 => {
                 self.state.jamo(&mut self.commit_string);
                 self.state.reset();
                 self.noble_history.clear();
@@ -428,7 +428,7 @@ impl InputContext {
             return;
         }
 
-        if !self.options.noble_name && !self.options.word_unit_commit {
+        if !self.options.존함 && !self.options.word_unit_commit {
             self.commit_string.push_str(&syl);
             self.history.clear();
             return;
@@ -483,7 +483,7 @@ pub enum InputOption {
     CombiOnDoubleStroke,
     NonChoseongCombi,
     OldJamo,
-    NobleName,
+    존함,
     WordUnitCommit,
 }
 

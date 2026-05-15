@@ -3,7 +3,7 @@ use korean::input_context::{InputContext, InputOption};
 #[test]
 fn test_noble_name_replacement() {
     let mut ic = InputContext::new("kps9256").expect("valid layout");
-    ic.set_option(InputOption::NobleName, true);
+    ic.set_option(InputOption::존함, true);
 
     // Test 김일성 -> U+F113 U+F114 U+F115
     // 김 (s k w) -> ㄱ+ㅣ+ㅁ
@@ -34,7 +34,7 @@ fn test_noble_name_replacement() {
 #[test]
 fn test_noble_name_replacement_split() {
     let mut ic = InputContext::new("kps9256").expect("valid layout");
-    ic.set_option(InputOption::NobleName, true);
+    ic.set_option(InputOption::존함, true);
 
     // 김정일 -> U+F116 U+F117 U+F118
     // s k w (김) -> ㄱ+ㅣ+ㅁ
@@ -52,7 +52,7 @@ fn test_noble_name_replacement_split() {
 #[test]
 fn test_noble_name_replacement_split_3() {
     let mut ic = InputContext::new("kps9256").expect("valid layout");
-    ic.set_option(InputOption::NobleName, true);
+    ic.set_option(InputOption::존함, true);
 
     // 김정은 -> U+F120 U+F121 U+F122
     // s k w (김) -> ㄱ+ㅣ+ㅁ
@@ -70,7 +70,7 @@ fn test_noble_name_replacement_split_3() {
 #[test]
 fn test_noble_name_non_matching() {
     let mut ic = InputContext::new("kps9256").expect("valid layout");
-    ic.set_option(InputOption::NobleName, true);
+    ic.set_option(InputOption::존함, true);
 
     // 김밥 (s k w q j q)
     for c in "skw".chars() { ic.process(c); }
@@ -90,7 +90,7 @@ fn test_noble_name_non_matching() {
 #[test]
 fn test_noble_name_backspace() {
     let mut ic = InputContext::new("kps9256").expect("valid layout");
-    ic.set_option(InputOption::NobleName, true);
+    ic.set_option(InputOption::존함, true);
 
     // 김 (s k w)
     for c in "skw".chars() { ic.process(c); }
