@@ -288,7 +288,7 @@ pub unsafe extern "C" fn korean_ic_set_option(
         2 => 입력항목::첫소리밖조합,
         3 => 입력항목::옛글자방식,
         4 => 입력항목::존함,
-        5 => 입력항목::단어단위확적,
+        5 => 입력항목::단어단위확정,
         _ => return,
     };
     ctx.문맥.항목설정(opt, 값);
@@ -306,7 +306,7 @@ pub unsafe extern "C" fn korean_ic_get_option(hic: *mut KoreanInputContext, opti
         2 => 입력항목::첫소리밖조합,
         3 => 입력항목::옛글자방식,
         4 => 입력항목::존함,
-        5 => 입력항목::단어단위확적,
+        5 => 입력항목::단어단위확정,
         _ => return false,
     };
     ctx.문맥.항목획득(opt)

@@ -2,7 +2,7 @@
 //!
 //! Usage:
 //! ```bash
-//! echo "삼국사기" | cargo run --bin hanja-search
+//! echo "인민" | cargo run --bin hanja-search
 //! ```
 
 use korean::hanja::한자사전;
@@ -96,19 +96,19 @@ fn search_and_print(사전: &한자사전, 열쇠: &str) {
 
 fn print_usage() {
     println!(
-        r#"Usage: 한자검색 [OPTION]... [DICT_FILE]
+        r#"Usage: hanja-search [OPTION]... [DICT_FILE]
 
-Search 한자 dictionary.
+Search hanja dictionary.
 
 Options:
   -f, --file=FILE       Dictionary file (default: data/hanja/hanja.txt)
-  -k, --열쇠=KEY         Search 열쇠 (if not provided, reads from stdin)
+  -k, --key=KEY         Search key (if not provided, reads from stdin)
   -h, --help            Display this help
   -v, --version         Output version information
 
 Examples:
-  echo "삼국사기" | 한자검색
-  한자검색 -k "한자"
-  한자검색 /path/to/hanja.txt"#
+  echo "인민" | hanja-search
+  hanja-search -k "한자"
+  hanja-search /path/to/hanja.txt"#
     );
 }

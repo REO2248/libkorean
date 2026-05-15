@@ -550,3 +550,40 @@ fn test_symbol_mapping() {
     문맥.처리('?');
     assert_eq!(문맥.결속문자렬(), "?");
 }
+
+#[test]
+fn test_repro_ban_gab_seub_nida() {
+    let mut ic = 입력문맥::new("romaja").unwrap();
+    let input = "banGabseubnida";
+    let mut output = String::new();
+    for ch in input.chars() {
+        if ic.처리(ch) {
+            output.push_str(ic.결속문자렬());
+        }
+    }
+    output.push_str(&ic.비우기());
+    assert_eq!(output, "반갑습니다");
+}
+
+#[test]
+fn test_preedit_noble_name_preservation() {
+    let mut ic = 입력문맥::new("romaja").unwrap();
+    ic.항목설정(입력항목::단어단위확정, true);
+    
+    // Type 'ban'
+    ic.처리('b');
+    ic.처리('a');
+    ic.처리('n'); // Delayed
+    assert_eq!(ic.편집문자렬(), "반");
+    
+    // Type 'b' -> 'ban' should stay in preedit
+    ic.처리('b');
+    // 'n' matched, '반' in state. 'b' delayed.
+    assert_eq!(ic.편집문자렬(), "반ㅂ");
+    
+    ic.처리('a'); 
+    // 'b' matched, '반' committed to history. 'ㅂ' + 'ㅏ' -> '바' in state.
+    let preedit = ic.편집문자렬();
+    assert_eq!(preedit, "반바");
+}
+

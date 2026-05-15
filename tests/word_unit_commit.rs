@@ -7,7 +7,7 @@ fn 문맥생성(layout: &str) -> 입력문맥 {
 #[test]
 fn test_word_unit_commit_backspace() {
     let mut 문맥 = 문맥생성("kps9256");
-    문맥.항목설정(입력항목::단어단위확적, true);
+    문맥.항목설정(입력항목::단어단위확정, true);
     
     // guryd -> 수령
     // g (ㅅ)

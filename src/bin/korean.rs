@@ -2,7 +2,7 @@
 //!
 //! Usage:
 //! ```bash
-//! echo "gksrmfdlqfur" | cargo run --bin korean
+//! echo "djffydtjgkqfkSJ" | cargo run --bin korean
 //! ```
 
 use korean::input_context::입력문맥;
@@ -116,8 +116,9 @@ Options:
   -v, --version             Output version information
 
 Examples:
-  echo "gksrmfdlqfur" | korean
-  korean -i "gksrmfdlqfur"
-  korean -k ro -i "hanugl""#
+  echo "djffydtjgkqfkSJ" | korean
+  korean -i "ajryssodgod"
+  korean -k romaja -i "banGabseubnida"
+"#
     );
 }

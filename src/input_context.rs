@@ -74,7 +74,7 @@ impl 입력문맥 {
                 }
                 self.설정.존함 = value;
             }
-            입력항목::단어단위확적 => self.설정.단어단위확정 = value,
+            입력항목::단어단위확정 => self.설정.단어단위확정 = value,
         }
     }
 
@@ -85,7 +85,7 @@ impl 입력문맥 {
             입력항목::첫소리밖조합 => self.설정.첫소리밖조합,
             입력항목::옛글자방식 => self.설정.옛글자방식,
             입력항목::존함 => self.설정.존함,
-            입력항목::단어단위확적 => self.설정.단어단위확정,
+            입력항목::단어단위확정 => self.설정.단어단위확정,
         }
     }
 
@@ -264,8 +264,8 @@ impl 입력문맥 {
     }
 
     pub fn 비우기(&mut self) -> String {
-        self.완충처리(true);
         self.결속문자렬.clear();
+        self.완충처리(true);
         self.결속으로비우기();
         let out = self.결속문자렬.clone();
         self.결속문자렬.clear();
@@ -276,7 +276,6 @@ impl 입력문맥 {
         self.상태.초기화();
         self.입력완충.clear();
         self.결속문자렬.clear();
-        self.존함기록.clear();
         self.기록.clear();
     }
 
@@ -303,32 +302,11 @@ impl 입력문맥 {
 
     pub fn 편집문자렬(&self) -> String {
         let mut out = String::new();
-        let 기록 = self.존함기록.clone();
 
         match self.출력방식 {
             출력방식::소리마디 => self.상태.preedit(&mut out),
             출력방식::자모 => self.상태.자모(&mut out),
         }
-
-        let mut combined = 기록.clone();
-        combined.push_str(&out);
-
-        if self.설정.존함 {
-            if combined.contains("김일성") {
-                combined = combined.replace("김일성", "\u{F113}\u{F114}\u{F115}");
-                return combined;
-            } else if combined.contains("김정일") {
-                combined = combined.replace("김정일", "\u{F116}\u{F117}\u{F118}");
-                return combined;
-            } else if combined.contains("김정은") {
-                combined = combined.replace("김정은", "\u{F120}\u{F121}\u{F122}");
-                return combined;
-            }
-        }
-
-        let mut final_out = 기록;
-        final_out.push_str(&out);
-        let mut out = final_out;
 
         if !self.입력완충.is_empty() {
             if let Some(mut kv) = self
@@ -375,8 +353,8 @@ impl 입력문맥 {
                                 },
                                 self.설정,
                             );
-                            for kv in next.기록() {
-                                final_next.key(*kv, self.설정);
+                            for k in next.기록() {
+                                final_next.key(*k, self.설정);
                             }
                             next = final_next;
                         }
@@ -396,7 +374,26 @@ impl 입력문맥 {
                 out.push_str(&self.입력완충);
             }
         }
-        out
+
+        let mut final_out = self.존함기록.clone();
+
+        if self.설정.존함 {
+            let mut combined = final_out.clone();
+            combined.push_str(&out);
+            if combined.contains("김일성") {
+                combined = combined.replace("김일성", "\u{F113}\u{F114}\u{F115}");
+                return combined;
+            } else if combined.contains("김정일") {
+                combined = combined.replace("김정일", "\u{F116}\u{F117}\u{F118}");
+                return combined;
+            } else if combined.contains("김정은") {
+                combined = combined.replace("김정은", "\u{F120}\u{F121}\u{F122}");
+                return combined;
+            }
+        }
+
+        final_out.push_str(&out);
+        final_out
     }
 
     pub fn 결속문자렬(&self) -> &str {
@@ -481,7 +478,7 @@ pub enum 입력항목 {
     첫소리밖조합,
     옛글자방식,
     존함,
-    단어단위확적,
+    단어단위확정,
 }
 
 #[derive(Debug)]
